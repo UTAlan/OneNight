@@ -1,6 +1,6 @@
 (function(){
 	// Types of players
-	const socket = io();
+	const socket = io.connect(window.location.hostname);
 	let my_player, my_game;
 	
 	// Connected, save player info
