@@ -1,6 +1,6 @@
 (function(){
 	// Types of players
-	const socket = io.connect(document.location.protocol + document.location.hostname);
+	const socket = io.connect('https://one-night-uw.herokuapp.com');
 	let my_player, my_game;
 	
 	// Connected, save player info
