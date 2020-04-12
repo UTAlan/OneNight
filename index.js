@@ -1,7 +1,19 @@
 const express = require('express');
-const app = express();
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const socketIO = require('socket.io');
+
+// const app = express();
+// const server = require('http').Server(app);
+// const io = require('socket.io')(server);
+
+const PORT = process.env.PORT || 3000;
+const INDEX = '/index.html';
+
+const server = express()
+  .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+	.listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+const io = socketIO(server);
+
 
 app.use(express.static('.'));
 
@@ -249,11 +261,6 @@ io.on('connection', (socket) => {
 		console.log('connected_players: ', connected_players);
 	});
 });
-
-const PORT = process.env.PORT || 3000;
-const INDEX = '/index.html';
-
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 	
 const shuffle = (array) => {
 	array.sort(() => Math.random() - 0.5);
