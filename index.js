@@ -12,7 +12,7 @@ const Player = require('./player.js'),
 	all_roles = ["Insomniac", "Robber", "Seer", "Troublemaker", "Villager", "Werewolf", "Werewolf"];
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', (socket) => {
@@ -250,8 +250,13 @@ io.on('connection', (socket) => {
 	});
 });
 
-server.listen(5000);
+const PORT = process.env.PORT || 3000;
+const INDEX = '/index.html';
 
+const server = express()
+  .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+	.listen(PORT, () => console.log(`Listening on ${PORT}`));
+	
 const shuffle = (array) => {
 	array.sort(() => Math.random() - 0.5);
 }
