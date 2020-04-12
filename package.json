@@ -1,0 +1,27 @@
+{
+  "name": "onenight",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UTAlan/OneNight.git"
+  },
+  "author": "Alan Beam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/UTAlan/OneNight/issues"
+  },
+  "homepage": "https://github.com/UTAlan/OneNight#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "jquery": "^3.4.1",
+    "jquery-ui-dist": "^1.12.1",
+    "skeleton-css": "^2.0.4",
+    "socket.io": "^2.3.0"
+  }
+}

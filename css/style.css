@@ -1,0 +1,77 @@
+.center { text-align: center; }
+.left { text-align: left; }
+.right { text-align: right; }
+.hidden, input[type=button].hidden { display: none; }
+img { width: 85px; }
+span.error { color: red; }
+span.success { color: green; }
+
+body { font-family: 'Source Sans Pro', sans-serif; }
+
+hr {
+	margin-top: 0;
+	margin-bottom: 0;
+	border-top: solid 1px black;
+}
+
+#header {
+	display: block;
+}
+
+#header .branding #logo {
+	width: 50px;
+	margin-right: 10px;
+}
+
+#header .branding h1 {
+	display: inline;
+	font-weight: 700;
+	font-size: 2em;
+	vertical-align: 12px;
+}
+
+#header .profile {
+	text-align: right;
+}
+
+.game_phase { 
+	margin-top: 25px; 
+}
+
+.game_phase .message {
+	text-align: center;
+}
+
+.game_id_label, .game_id_text {
+	font-weight: bold;
+}
+
+#morning #new_game, #morning #join_game {
+	text-align: center;
+}
+
+#afternoon .message #invite_game_id {
+	font-weight: bold;
+}
+
+#evening input[type=button].disabled, #night input[type=button].disabled {
+	cursor: not-allowed;
+	background-color: #EEE;
+}
+
+#evening input[type=button].disabled:hover, #night input[type=button].disabled:hover {
+	color: #555;
+	border-color: #BBB;
+}
+
+#action_message { font-weight: bold; }
+
+#game_log_wrapper { 
+	overflow: auto; 
+	border: solid 1px black;
+	background: #EEE;
+}
+
+#game_log_header { font-weight: bold; }
+
+.ui-selected { border: solid 2px orange; }
