@@ -214,6 +214,9 @@
 	socket.on('morningStarted', (data) => {
 		console.log('Morning started');
 		updateObjects(data);
+		
+		$('.game_phase').addClass('hidden');
+		$('#night').removeClass('hidden');
 
 		$('#night .cards').selectable("disable");
 		$('#end_btn').addClass('hidden');
