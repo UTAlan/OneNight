@@ -1,6 +1,7 @@
 (function(){
 	// Types of players
-	const socket = io.connect();
+	const socket = io.connect(),
+		debug = true;
 	let my_player, my_game;
 	
 	// Connected, save player info
@@ -11,10 +12,34 @@
 		$('#username_input').val(my_player.name);
 	});
 
+	// Redirect to home page
+	$('.homeLink').on('click', () => {
+		$('.game_phase').addClass('hidden');
+		$('#morning').removeClass('hidden');
+
+		// Reset night view
+		$('#night .actions').removeClass('hidden');
+		$('#night_message').removeClass('hidden');
+
+		$('#game_over_message').addClass('hidden');
+		$('.game_over_messages').addClass('hidden');
+		$('#game_log_wrapper').addClass('hidden');
+
+		$("#vote_btn").removeAttr('disabled').removeClass('disabled');
+		$('#vote_player').removeAttr('disabled');
+		
+		$('#victory_message').html('');
+		$('#death_message').html('');
+		$('#game_log').html('');
+
+		return false;
+	});
+
 	// Edit username clicked, show text box
 	$('#edit_username').on('click', () => {
 		$('#username_text').addClass('hidden');
 		$('#username_input').removeClass('hidden');
+		$('#username_input').select();
 		return false;
 	});
 
@@ -40,6 +65,7 @@
 	// Join Game button clicked
 	$(document).on('submit', 'form#join_game_form', () => {
 		socket.emit('joinGame', $('#join_game_id').val());
+		$('#join_game_id').val('');
 		return false;
 	});
 
@@ -49,6 +75,7 @@
 		$('#afternoon').removeClass('hidden');
 
 		updateObjects(data);
+		updatePlayerList();
 
 		$('#invite_game_id').html(my_game.id);
 		$('.label_player1').html(my_player.name);
@@ -121,19 +148,25 @@
 
 	// All players are ready, begin night
 	socket.on('nightStarted', (data) => {
-		console.log('Night started');
+		debugLog('Night started');
 		updateObjects(data);
 
-		$('img.card').attr('src', 'images/card.png');
-		$('.game_id_text').html(my_game.id);
+		$('img.card').attr('src', 'images/card.png'); // Flip all cards facedown
+		$('.game_id_text').html(my_game.id); // Update Game ID
+
+		// Show Night Phase
 		$('.game_phase').addClass('hidden');
 		$('#night').removeClass('hidden');
 
+		// Re-enable ready button for next game
+		$('#ready_btn').removeAttr('disabled').removeClass('disabled');
+
+		// If host, show End Night button
 		if (my_player.index == 1) {
-			console.log(my_player);
 			$('#end_btn').removeClass('hidden');
 		}
 
+		// Make cards clickable
 		$("#night .cards").bind("mousedown", (e) => {
 			e.metaKey = true;
 		}).selectable({
@@ -148,7 +181,7 @@
 
 	// Reveal card
 	$('#reveal_btn').on('click', () => {
-		console.log('Reveal card');
+		debugLog('Reveal card');
 
 		let card = $('.ui-selected');
 		$('#action_message').html('').attr('class', '');
@@ -175,7 +208,7 @@
 
 	// Swap cards
 	$('#swap_btn').on('click', () => {
-		console.log('Swap cards');
+		debugLog('Swap cards');
 		
 		let cards = $('.ui-selected');
 		$('#action_message').html('').attr('class', '');
@@ -212,17 +245,17 @@
 
 	// Morning started
 	socket.on('morningStarted', (data) => {
-		console.log('Morning started');
+		debugLog('Morning started');
 		updateObjects(data);
 		
 		$('.game_phase').addClass('hidden');
 		$('#night').removeClass('hidden');
 
+		$("#night .cards").selectable();
 		$('#night .cards').selectable("disable");
 		$('#end_btn').addClass('hidden');
 		$('#vote_form').removeClass('hidden');
-		$('#reveal_btn').addClass('hidden');
-		$('#swap_btn').addClass('hidden');
+		$('#night .actions').addClass('hidden');
 		$('#night_message').addClass('hidden');
 		$('#morning_message').removeClass('hidden');
 	});
@@ -251,7 +284,6 @@
 		$('#victory_message').html(data.victory_msg);
 		$('#death_message').html(data.death_msg);
 
-		console.log('game roles', my_game.roles);
 		for (let i = 1; i <= 7; i++) {
 			$('#card_' + i).attr('src', 'images/' + my_game.roles[i] + '.png');
 		}
@@ -267,11 +299,19 @@
 		}
 		if (objects.game) {
 			my_game = new Game(objects.game);
+
+			if (!objects.player) {
+				for (let k of Object.keys(my_game.players)) {
+					if (my_game.players[k].index == my_player.index) {
+						my_player = new Player(my_game.players[k]);
+					}
+				}
+			}
 		}
 	}
 
 	const updatePlayerList = () => {
-		console.log('update player list');
+		debugLog('Update player list');
 		let four_players = true;
 
 		$('#vote_player').empty();
@@ -287,21 +327,17 @@
 				} else {
 					$('#vote_player').append($("<option></option>").attr("value", p.index).text(p.name));
 				}
-
-				console.log('player ' + i + ': ' + p.name);
 			} else {
 				four_players = false;
-				console.log('fewer than 4 players');
 			}
 
 			$('.label_player' + i).html(html);
 		}
 
+		$('.game_id_text').html(my_game.id);
+
 		if (my_game.state == 'Afternoon' && my_player.index == 1 && four_players) {
-			console.log('ready for evening');
 			$('#begin_evening').removeClass('hidden');
-		} else {
-			console.log(my_game.state, my_player.index, four_players ? '1' : '0');
 		}
 	};
 
@@ -334,6 +370,14 @@
 
 				$('.ui-selecting').removeClass("ui-selecting");
 				break;
+		}
+	};
+
+	const debugLog = (...args) => {
+		if (!debug) { return; }
+
+		for (let arg of args) {
+			console.log(args);
 		}
 	};
 })();

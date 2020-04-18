@@ -1,17 +1,8 @@
 const express = require('express');
 const socketIO = require('socket.io');
-
 const app = express();
-// const server = require('http').Server(app);
-// const io = require('socket.io')(server);
-
 const PORT = process.env.PORT || 3000;
-const INDEX = '/index.html';
-
-const server = app
-  //.use((req, res) => res.sendFile(INDEX, { root: __dirname }))
-	.listen(PORT, () => console.log(`Listening on ${PORT}`));
-
+const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 const io = socketIO(server);
 
 app.use(express.static('.'));
@@ -33,7 +24,6 @@ io.on('connection', (socket) => {
 	console.log('Creating player');
 	const p = new Player({ id: socket.id });
 	connected_players[socket.id] = p;
-	console.log('connected_players: ', connected_players);
 
 	socket.emit('connected', { player: p });
 
@@ -47,7 +37,6 @@ io.on('connection', (socket) => {
 			current_games[game_id].players[connected_players[socket.id].index].name = name;
 			io.in(game_id).emit('playerNameChanged', { game: current_games[game_id] });
 		}
-		console.log('connected_players: ', connected_players);
 	});
 
 	// New Game created
@@ -58,8 +47,6 @@ io.on('connection', (socket) => {
 		connected_players[socket.id].game_id = g.id;
 		g.players[1] = connected_players[socket.id];
 		current_games[g.id] = g;
-		console.log('current_games: ', current_games);
-		console.log('game.players: ', current_games[g.id].players);
 
 		socket.emit('gameCreated', { player: connected_players[socket.id], game: g });
 		socket.join(g.id);
@@ -96,11 +83,11 @@ io.on('connection', (socket) => {
 		}
 		connected_players[socket.id].game_id = game_id;
 		current_games[game_id].players[connected_players[socket.id].index] = connected_players[socket.id];
-		console.log('connected_players: ', connected_players);
-		console.log('current_games: ', current_games);
-		console.log('game.players: ', current_games[game_id].players);
 
 		switch (current_games[game_id].state) {
+			case 'GameOver':
+				socket.emit('gameOver', { player: connected_players[socket.id], game: current_games[game_id] });
+				break;
 			case 'Morning':
 				socket.emit('morningStarted', { player: connected_players[socket.id], game: current_games[game_id] });
 				break;
@@ -147,10 +134,13 @@ io.on('connection', (socket) => {
 			}
 		}
 
-		current_games[game_id].state = 'Night';
-
+		// Everybody is ready, start night
 		if (num_ready == 4) {
-			io.in(game_id).emit('nightStarted', { game: current_games[game_id] });
+			current_games[game_id].state = 'Night';
+
+			for (let k of Object.keys(current_games[game_id].players)) {
+				io.to(current_games[game_id].players[k].id).emit('nightStarted', { game: current_games[game_id] });
+			}
 		}
 	});
 
@@ -242,7 +232,18 @@ io.on('connection', (socket) => {
 				}
 			}
 
+			current_games[data.game_id].state = 'GameOver';
+
+			// Reset player attributes
+			for (let i = 1; i <= 4; i++) {
+				let player = current_games[data.game_id].players[i];
+				connected_players[player.id] = new Player({ id: player.id, name: player.name });
+			}
+
 			io.in(data.game_id).emit('gameOver', { game: current_games[data.game_id], death_msg: death_msg, victory_msg: victory_msg });
+
+			// Remove game
+			delete current_games[data.game_id];
 		}
 	})
 
