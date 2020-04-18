@@ -22,7 +22,8 @@ io.on('connection', (socket) => {
 
 	// Create player and send back to client
 	console.log('Creating player');
-	const p = new Player({ id: socket.id });
+	const player_name = generatePlayerName();
+	const p = new Player({ id: socket.id, name: player_name });
 	connected_players[socket.id] = p;
 
 	socket.emit('connected', { player: p });
@@ -264,4 +265,12 @@ io.on('connection', (socket) => {
 	
 const shuffle = (array) => {
 	array.sort(() => Math.random() - 0.5);
-}
+};
+
+const generatePlayerName = () => {
+	const fs = require("fs");
+	const text = fs.readFileSync("./names.txt", "utf-8");
+	const names = text.split("\n")
+	shuffle(names);
+	return names[0];
+};

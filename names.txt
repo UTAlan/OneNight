@@ -1,0 +1,519 @@
+Aragorn
+Arwen
+Bilbo
+Boromir
+Denethor
+Elrond
+Éomer
+Éowyn
+Faramir
+Frodo
+Galadriel
+Gandalf
+Gimli
+Gollum
+Legolas
+Merry
+Pippin
+Radagast
+Sam
+Saruman
+Sauron
+Shelob
+Théoden
+Tom Bombadil
+Treebeard
+Wormtongue
+4-LOM
+Ayla Secura
+Admiral Ackbar
+Ahsoka Tano
+Anakin Solo
+Asajj Ventress
+Aurra Sing
+Senator Bail Organa
+Barris Offee
+Bastila Shan
+Ben Skywalker
+Bib Fortuna
+Boba Fett
+Bossk
+Brakiss
+C-3PO
+Cad Bane
+Cade Skywalker
+Callista Ming
+Captain Rex
+Carnor Jax
+Chewbacca
+Clone Commander Cody
+Count Dooku
+Darth Bane
+Darth Krayt
+Darth Malgus
+Darth Maul
+Darth Nihilus
+Darth Vader
+Dash Rendar
+Dengar
+Durge
+Emperor Palpatine
+Exar Kun
+Galen Marek
+General Crix Madine
+General Dodonna
+General Grievous
+General Veers
+Gilad Pellaeon
+Grand Moff Tarkin
+Greedo
+Han Solo
+IG 88
+Jabba The Hutt
+Jacen Solo
+Jaina Solo
+Jango Fett
+Jarael
+Jerec
+Joruus CBaoth
+Kent C. Dodds
+Ki-Adi-Mundi
+Kir Kanos
+Kit Fisto
+Kueller
+Kyle Katarn
+Kyp Durron
+Lando Calrissian
+Luke Skywalker
+Luminara Unduli
+Lumiya
+Mace Windu
+Mara Jade
+Mission Vao
+Natasi Daala
+Nom Anor
+Obi-Wan Kenobi
+Padmé Admidala
+Plo Koon
+Pre Vizsla
+Prince Xizor
+Princess Leia
+Proxy
+Qui-Gon Jinn
+Quinlan Vos
+R2-D2
+Rahm Kota
+Satele Shan
+Savage Opress
+Sebulba
+Shaak Ti
+Shmi Skywalker
+Talon Karrde
+Ulic Qel-Droma
+Visas Marr
+Watto
+Wedge Antilles
+Yoda
+Zam Wesell
+Zayne Carrick
+Zuckuss
+Adela Pennyfather 
+Ahoshta Tarkaan 
+Alberta Scrubb
+Alimash 
+Andrew Ketterley
+Anne Featherstone 
+Anradin Tarkaan 
+Aravis Tarkeena 
+Ardeeb Tisroc 
+Lord Argoz 
+Lord Arlian
+Arsheesh
+Aslan 
+Axartha Tarkaan 
+Azaroth 
+Azrooh
+Bacchus 
+Mr. Beaver
+Mrs. Beaver
+Lord Belisar 
+Lord Bern
+Betty 
+Bree
+Bricklethumb
+Camillo 
+Carter
+Caspian I 
+Caspian VIII
+Caspian IX
+Caspian X 
+Chervy
+Chief Voice 
+Chlamash
+Chomondeley Major 
+Clipsie 
+Clodsley Shovel 
+Cloudbirth
+Col 
+Cole
+Colin 
+Cor 
+Coriakin
+Corin Thunderfist 
+Doctor Cornelius 
+Corradin
+Dar 
+Darrin
+Daughter of Ramandu 
+Diggle
+Professor Digory Kirke 
+Lord Drinian 
+Duffle
+Dumnus
+Edith Winterblott 
+Edmund Pevensie 
+Emerald Witch 
+Emeth Tarkaan 
+Emperor-Beyond-The-Sea
+Lord Erimon
+Erlian
+Eustace Clarence Scrubb 
+Farsight
+Father Christmas
+Father Time 
+Fenris Ulf
+Fledge
+Frank I 
+Gale
+Garett Twins
+Ginger
+Girbius 
+Glenstorm 
+Glimfeather 
+Lord Glozelle
+Golg
+Griffle 
+Gumpas
+Gwendolen 
+Harold Scrubb 
+Harpha Tarkaan
+Helen 
+Hermit
+Hogglestock 
+Hwin
+Ilgamuth
+Ilsombreh Tarkaan 
+Jackdaw 
+Jadis 
+Jewel 
+Jill Pole 
+Kidrash Tarkaan 
+Lady Liln
+Lapsed Bear 
+Lasaraleen Tarkheena
+Mrs. Lefay 
+Letitia Ketterly
+Lilith
+Lilygloves
+Lucy Pevensie 
+King Lune
+Mabel Kirke 
+Mrs. Macready
+Margaret
+Majorie Preston 
+Maugrim 
+Mavramorn 
+Mentius 
+Miraz 
+Moonwood
+King Nain
+Nausus
+Nikabrik
+Nimienus
+Nurse
+Lord Octesian
+King Olvin 
+Obentinus 
+Oscuns
+Pattertwig
+Peepiceek 
+Lord Peridan 
+Peter Pevensie
+Phoenix 
+Pittencream 
+Poggin
+Polly Plummer 
+Pomona
+Miss Prizzle 
+Professor Kirke 
+Prunaprismia
+Puddleglum
+Pug 
+Puzzle
+Rabadash
+Ram 
+Ramandu 
+Raven of Ravenscaur 
+Reepicheep
+Lord Restimar
+Lord Revilian
+Rhince
+Lord Rhoop 
+Rilian
+Rishda Tarkaan
+Rishti Tarkaan
+River-God 
+Rogin 
+Roonwit 
+Rumblebuffin
+Rynelf
+Sallowpad 
+Sarah 
+Shasta
+Shift 
+Silenus 
+Slinkey 
+Lord Sopespian 
+Spivvins
+Stonefoot 
+Strawberry
+Susan Pevensie
+Swanwhite 
+Tash
+Thornbut
+King Tirian
+Tran
+Trufflehunter 
+Trumpkin
+Tumnus
+Urnus 
+Voluns
+Voltinus
+Warden
+White Stag
+White Witch 
+Wimbleweather 
+Wraggle 
+Zardeenah 
+Agnes Jurati
+Airiam
+Alexander Rozhenko
+Alynna Nechayev
+Alyssa Ogawa
+Amanda Grayson
+Ash Tyler
+Voq
+Ayala
+Azan
+Bareil Antos
+Beckett Mariner
+B'Elanna Torres
+Benjamin Sisko
+B'Etor
+Beverly Crusher
+Boothby
+Brad Boimler
+Brunt
+Carol Marcus
+Chakotay
+Charles Tucker
+Chell
+Christine Chapel
+Christopher Pike
+Cristobal "Chris" Rios
+Damar
+Daniels
+Data
+Deanna Troi
+Degra
+Dolim
+Dukat
+Elim Garak
+Elizabeth Cutler
+Elnor
+Enabran Tain
+Erika Hernandez
+Evek
+Ezri Dax
+Female Changeling
+Gabriel Lorca
+Gabrielle Burnham
+Garrison
+Gen Rhys
+Geordi La Forge
+Gowron
+Guinan
+Harry Kim
+Harry Mudd
+Hikaru Sulu
+Hogan
+Hoshi Sato
+Hugh
+Hugh Culber
+Icheb
+Ishka
+J. Hayes
+J. M. Colt
+Jadzia Dax
+Jake Sisko
+Jal Culluh
+James T. Kirk
+Janice Rand
+Jannar
+Jean-Luc Picard
+Jennifer Sisko
+Jet Reno
+Joann Owosekun
+Jonathan Archer
+José Tyler
+Joseph Carey
+Joseph Sisko
+Julian Bashir
+Kashimuro Nozawa
+Kasidy Yates
+Katherine Pulaski
+Kathryn Janeway
+Katrina Cornwell
+K'Ehleyr
+Keiko O'Brien
+Kes
+Keyla Detmer
+Kimara Cretak
+Kira Nerys
+Kol
+Kor
+Kurn
+Laris
+Leeta
+Leland
+Leonard McCoy
+Leonardo da Vinci
+Li Nalas
+Linus
+Lon Suder
+Lore
+L'Rell
+Lursa
+Luther Sloan
+Lwaxana Troi
+Maihar'du
+Malcolm Reed
+Mallora
+Martok
+Maxwell Forrest
+Mezoti
+Michael Burnham
+Michael Eddington
+Michael Jonas
+Michael Rostov
+Mila
+Miles O'Brien
+Molly O'Brien
+Montgomery Scott
+Mora Pol
+Morn
+Mot
+Mr. Homn
+Naomi Wildman
+Narek
+Narissa Rizzo
+Neelix
+Nhan
+Nilsson
+Nog
+Nyota Uhura
+Odo
+Oh
+Opaka Sulan
+Owen Paris
+Paul Stamets
+Pavel Chekov
+Philippa Georgiou
+Phillip Boyce
+Phlox
+Q
+Quark
+R.A. Bryce
+Raffi Musiker
+Rebi
+Reginald Barclay
+Ro Laren
+Robin Lefler
+Rom
+Saavik
+Samantha Wildman
+Sarah Sisko
+Sarek
+Saru
+Sela
+Seska
+Seven of Nine
+Shakaar Edon
+Silik
+Soji Asha
+Sonya Gomez
+Soval
+Spock
+Susan Nicoletti
+Sylvia Tilly
+Tal Celes
+Tasha Yar
+The Borg Queen
+The Doctor
+The Traveler
+Thy'lek Shran
+Tom Paris
+Tomalak
+Tora Ziyal
+T'Pol
+Tracy Pollard
+Travis Mayweather
+Tuvok
+Una
+Vash
+Vic Fontaine
+Vorik
+Wesley Crusher
+Weyoun
+William Riker
+William Ross
+Winn Adami
+Worf
+Zek
+Zhaban
+Bastian Balthazar Bux
+Atreyu
+Carl Conrad Coreander
+The Childlike Empress
+Engywook and Urgl
+Falkor
+Gmork
+Grograman
+Morla
+The Old Man of Wandering Mountain
+Pyornkrachzark
+Gluckuk
+Whooshwoozool
+Blubb
+The Southern Oracle
+Xayide
+Ygramul
+Bark Troll
+Cairon
+Dame Eyola
+Hero Hynreck
+Princess Oglamar
+Hykrion
+Hysbald
+Hydorn
+Ilwan
+Nimbly
+Querquobad the Silver Sage
+Shexper
+Smerg
+Tri-Face
+Yikka
+Yor
+Acharis 
+Rockbiter
+Unlucky the Rabbit 
