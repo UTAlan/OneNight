@@ -1,7 +1,7 @@
 (function(){
 	// Types of players
 	const socket = io.connect(),
-		debug = true;
+		debug = false;
 	let my_player, my_game;
 	
 	// Connected, save player info
