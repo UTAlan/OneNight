@@ -24,6 +24,7 @@
 		$('#game_over_message').addClass('hidden');
 		$('#night .actions').removeClass('hidden');
 		$('#night .actions .action_wrapper').addClass('hidden');
+		$('#action_message').html('');
 		$('#night .actions input[type=button]').addClass('disabled').attr('disabled', 'disabled');
 		$('#vote_form').addClass('hidden');
 		$('#vote_player').removeAttr('disabled');
@@ -219,7 +220,7 @@
 						}
 					},
 				});
-				$('#night #card_player' + my_player.index).selectable("disable");
+				$('#night #card_player' + my_player.index).selectable("destroy");
 				break;
 			case 'Robber':
 				debugLog('Robber');
@@ -244,7 +245,7 @@
 						$('#rob_btn').addClass('disabled').attr('disabled', 'disabled');
 					},
 				});
-				$('#night #card_player' + my_player.index).selectable("disable");
+				$('#night #card_player' + my_player.index).selectable("destroy");
 				break;
 			case 'Werewolf':
 				debugLog('Werewolf');
@@ -325,7 +326,7 @@
 						}
 					},
 				});
-				$('#night #card_player' + my_player.index).selectable("disable");
+				$('#night #card_player' + my_player.index).selectable("destroy");
 				break;
 			case 'Villager':
 			default:
@@ -360,7 +361,7 @@
 		$('#reveal_btn_wrapper').addClass('hidden');
 		const c = cards.length > 1 ? 'Cards' : 'Card';
 		$('#action_message').html(c + ' successfully revealed!').addClass('success');
-		$('#night .ui-selectable').selectable("disable");
+		$('#night .ui-selectable').selectable("destroy");
 
 		setTimeout(() => {
 			$('.card').attr('src', 'images/card.png');
@@ -392,7 +393,7 @@
 		cards.removeClass('ui-selected');
 		$('#swap_btn').addClass('disabled').attr('disabled', 'disabled');
 		$('#swap_btn_wrapper').addClass('hidden');
-		$('#night .ui-selectable').selectable("disable");
+		$('#night .ui-selectable').selectable("destroy");
 
 		setTimeout(() => { $('#action_message').html('You have already completed your action.').attr('class', ''); }, 3000);
 	});
@@ -421,7 +422,7 @@
 		card.removeClass('ui-selected');
 		$('#rob_btn').addClass('disabled').attr('disabled', 'disabled');
 		$('#rob_btn_wrapper').addClass('hidden');
-		$('#night .ui-selectable').selectable("disable");
+		$('#night .ui-selectable').selectable("destroy");
 		
 		setTimeout(() => {
 			card.attr('src', 'images/card.png');
@@ -454,7 +455,7 @@
 		$('#night').removeClass('hidden');
 
 		$("#night .cards").selectable();
-		$('#night .cards').selectable("disable");
+		$('#night .cards').selectable("destroy");
 		$('#end_btn').addClass('hidden');
 		$('#vote_form').removeClass('hidden');
 		$('#night .actions').addClass('hidden');
