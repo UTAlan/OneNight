@@ -132,13 +132,13 @@
 
 				<div class="row">
 					<div class="four columns center">
-						<p class="actions">
-							<input type="button" id="reveal_btn" value="Reveal" class="disabled" disabled="disabled" />
-							<br />
-							<input type="button" id="swap_btn" value="Swap" class="disabled" disabled="disabled" />
-							<br />
-							<span id="action_message"></span>
-						</p>
+						<div class="actions">
+							<p><strong>Action:</strong></p>
+							<p id="reveal_btn_wrapper" class="action_wrapper hidden"><input type="button" id="reveal_btn" value="Reveal" class="disabled" disabled="disabled" /></p>
+							<p id="swap_btn_wrapper" class="action_wrapper hidden"><input type="button" id="swap_btn" value="Swap" class="disabled" disabled="disabled" /></p>
+							<p id="rob_btn_wrapper" class="action_wrapper hidden"><input type="button" id="rob_btn" value="Rob" class="disabled" disabled="disabled" /></p>
+							<p id="action_message"></p>
+						</div>
 
 						<form id="vote_form" class="hidden">
 							<p>
@@ -158,7 +158,7 @@
 					</div>
 					<div class="four columns center" id="middle_column">
 						<p class="label_player3"></p>
-						<p class="cards" id="card_player3"><img src="images/card.png" alt="Card" class="card" id="card_3" /></p>
+						<p class="cards player_card" id="card_player3"><img src="images/card.png" alt="Card" class="card" id="card_3" /></p>
 					</div>
 					<div class="four columns center">
 						<p id="game_id_wrapper"><span class="game_id_label">Game ID:</span> <span class="game_id_text"></span></p>
@@ -175,29 +175,29 @@
 				<div class="row">
 					<div class="three columns center">
 						<p class="label_player2"></p>
-						<p class="cards" id="card_player2"><img src="images/card.png" alt="Card" class="card" id="card_2" /></p>
+						<p class="cards player_card" id="card_player2"><img src="images/card.png" alt="Card" class="card" id="card_2" /></p>
 					</div>
 					<div class="two columns center">
 						<p>&nbsp;</p>
-						<p class="cards" id="card_middle1"><img src="images/card.png" alt="Card" class="card" id="card_5" /></p>
+						<p class="cards middle_card" id="card_middle1"><img src="images/card.png" alt="Card" class="card" id="card_5" /></p>
 					</div>
 					<div class="two columns center">
 						<p>&nbsp;</p>
-						<p class="cards" id="card_middle2"><img src="images/card.png" alt="Card" class="card" id="card_6" /></p>
+						<p class="cards middle_card" id="card_middle2"><img src="images/card.png" alt="Card" class="card" id="card_6" /></p>
 					</div>
 					<div class="two columns center">
 						<p>&nbsp;</p>
-						<p class="cards" id="card_middle3"><img src="images/card.png" alt="Card" class="card" id="card_7" /></p>
+						<p class="cards middle_card" id="card_middle3"><img src="images/card.png" alt="Card" class="card" id="card_7" /></p>
 					</div>
 					<div class="three columns center">
 						<p class="label_player4"></p>
-						<p class="cards" id="card_player4"><img src="images/card.png" alt="Card" class="card" id="card_4" /></p>
+						<p class="cards player_card" id="card_player4"><img src="images/card.png" alt="Card" class="card" id="card_4" /></p>
 					</div>
 				</div>
 				<div class="row">
 					<div class="twelve columns center">
 						<p class="label_player1"></p>
-						<p class="cards" id="card_player1"><img src="images/card.png" alt="Card" class="card" id="card_1" /></p>
+						<p class="cards player_card" id="card_player1"><img src="images/card.png" alt="Card" class="card" id="card_1" /></p>
 					</div>
 				</div>
 			</div>

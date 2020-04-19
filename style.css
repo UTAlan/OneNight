@@ -3,8 +3,8 @@
 .right { text-align: right; }
 .hidden, input[type=button].hidden { display: none; }
 img { width: 85px; }
-span.error { color: red; }
-span.success { color: green; }
+.error { color: red; }
+.success { color: green; }
 
 body { font-family: 'Source Sans Pro', sans-serif; }
 
@@ -69,7 +69,7 @@ hr {
 	border-color: #BBB;
 }
 
-#action_message { font-weight: bold; }
+/* #action_message { font-weight: bold; } */
 
 #game_log_wrapper { 
 	overflow: auto; 
@@ -79,4 +79,6 @@ hr {
 
 #game_log_header { font-weight: bold; }
 
+.ui-selectee { border: dotted 2px orange; }
+.ui-selectable-disabled .ui-selectee { border: none; }
 .ui-selected { border: solid 2px orange; }

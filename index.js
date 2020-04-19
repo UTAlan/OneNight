@@ -45,6 +45,7 @@ io.on('connection', (socket) => {
 		console.log('Creating game');
 		const g = new Game();
 		connected_players[socket.id].index = 1;
+		connected_players[socket.id].ready = false;
 		connected_players[socket.id].game_id = g.id;
 		g.players[1] = connected_players[socket.id];
 		current_games[g.id] = g;
@@ -83,6 +84,7 @@ io.on('connection', (socket) => {
 			}
 		}
 		connected_players[socket.id].game_id = game_id;
+		connected_players[socket.id].ready = false;
 		current_games[game_id].players[connected_players[socket.id].index] = connected_players[socket.id];
 
 		switch (current_games[game_id].state) {
@@ -116,6 +118,10 @@ io.on('connection', (socket) => {
 		shuffle(all_roles);
 		for (let i = 0; i < all_roles.length; i++) {
 			current_games[game_id].roles[i + 1] = all_roles[i]
+			if (i < 4) {
+				current_games[game_id].players[i + 1].role = all_roles[i];
+				connected_players[current_games[game_id].players[i + 1].id].role = all_roles[i];
+			}
 		}
 		console.log('Roles assigned', all_roles);
 
@@ -137,6 +143,7 @@ io.on('connection', (socket) => {
 
 		// Everybody is ready, start night
 		if (num_ready == 4) {
+			console.log("Everybody ready, Night started.");
 			current_games[game_id].state = 'Night';
 
 			for (let k of Object.keys(current_games[game_id].players)) {
@@ -170,18 +177,24 @@ io.on('connection', (socket) => {
 	socket.on('addToGameLog', (data) => {
 		const today = new Date();
 		const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+		let target, target_1, target_2;
 
 		switch(data.action) {
-			case 'r':
-				const target = data.index < 5 ? current_games[data.game_id].players[data.index].name : "Middle " + (data.index - 4);
+			case 'reveal':
+				console.log('Revealed: ', data.index);
+				target = data.index < 5 ? current_games[data.game_id].players[data.index].name : "Middle " + (data.index - 4);
 				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " revealed a card.<br />Target - " + target);
 				break;
-			case 's':
+			case 'swap':
 				console.log('Swapped: ', data.card_1, data.card_2);
-				const target_1 = data.card_1 < 5 ? current_games[data.game_id].players[data.card_1].name : "Middle " + (data.card_1 - 4);
-				const target_2 = data.card_2 < 5 ? current_games[data.game_id].players[data.card_2].name : "Middle " + (data.card_2 - 4);
+				target_1 = data.card_1 < 5 ? current_games[data.game_id].players[data.card_1].name : "Middle " + (data.card_1 - 4);
+				target_2 = data.card_2 < 5 ? current_games[data.game_id].players[data.card_2].name : "Middle " + (data.card_2 - 4);
 				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " swapped cards.<br />Targets - " + target_1 + " & " + target_2);
 				break;
+			case 'rob':
+				console.log('Robbed: ', data.index);
+				target = current_games[data.game_id].players[data.index].name;
+				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " robbed a card.<br />Target - " + target);
 		};
 	});
 

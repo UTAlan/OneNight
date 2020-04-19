@@ -8,6 +8,7 @@ class Player {
 		this.index = 0;
 		this.game_id = 0;
 		this.ready = false;
+		this.role = '';
 
 		Object.assign(this, options);
 	}
@@ -51,18 +52,15 @@ class Player {
 	set ready(ready) {
 		this._ready = ready;
 	}
-};
 
-/*
-Player.prototype.getStartingRole = () => {
-	return this.starting_role;
-};
+	get role() {
+		return this._role;
+	}
 
-Player.prototype.setStartingRole = (role) => {
-	this.starting_role = role;
-	return this;
+	set role(role) {
+		this._role = role;
+	}
 };
-*/
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 	module.exports = Player;
