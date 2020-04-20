@@ -62,6 +62,7 @@
 
 	$('#username_refresh').on('click', () => {
 		socket.emit('generateNewName');
+		return false;
 	});
 
 	socket.on('nameGenerated', (data) => {
@@ -83,6 +84,8 @@
 
 		// Emit success
 		socket.emit('usernameChanged', my_player.name);
+
+		return false;
 	});
 
 	// Edit username - Enter pressed, save username & hide text box
