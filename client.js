@@ -51,26 +51,44 @@
 
 		// Change view
 		$('#username_text').addClass('hidden');
+		$('#edit_username').addClass('hidden');
 		$('#username_input').removeClass('hidden');
+		$('#username_refresh').removeClass('hidden');
+		$('#username_save').removeClass('hidden');
 		$('#username_input').select();
 		
 		return false; // Don't process link
 	});
 
+	$('#username_refresh').on('click', () => {
+		socket.emit('generateNewName');
+	});
+
+	socket.on('nameGenerated', (data) => {
+		$('#username_input').val(data.name);
+	});
+
+	$('#username_save').on('click', () => {
+		debugLog('Username Changed', $('#username_input').val());
+
+		// Update player name
+		my_player.name = $('#username_input').val();
+
+		// Update view
+		$('#username_input').addClass('hidden');
+		$('#username_text').html(my_player.name).removeClass('hidden');
+		$('#username_refresh').addClass('hidden');
+		$('#username_save').addClass('hidden');
+		$('#edit_username').removeClass('hidden');
+
+		// Emit success
+		socket.emit('usernameChanged', my_player.name);
+	});
+
 	// Edit username - Enter pressed, save username & hide text box
 	$('#username_input').on('keypress', (e) => {
 		if (e.which == 13) { // Enter
-			debugLog('Username Changed', $('#username_input').val());
-
-			// Update player name
-			my_player.name = $('#username_input').val();
-
-			// Update view
-			$('#username_input').addClass('hidden');
-			$('#username_text').html(my_player.name).removeClass('hidden');
-
-			// Emit success
-			socket.emit('usernameChanged', my_player.name);
+			$('#username_save').click();
 		}
 	});
 

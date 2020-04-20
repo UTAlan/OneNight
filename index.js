@@ -60,6 +60,13 @@ io.on('connection', (socket) => {
 		socket.emit('connected', { player: all_players[socket.id], all_roles: all_roles, default_roles: default_roles });
 	});
 
+	// Generate a new name
+	socket.on('generateNewName', () => {
+		console.log('Generate New Name');
+		
+		socket.emit('nameGenerated', { name: generatePlayerName() });
+	});
+
 	// Player has changed their username
 	socket.on('usernameChanged', (name) => {
 		console.log('Changing username to: ' + name);
