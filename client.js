@@ -3,6 +3,12 @@
 		debug = true,
 		action_duration = 3000;
 	let my_player, my_game, all_roles, default_roles;
+
+	if (!window.localStorage.getItem('uUID')) {
+		window.localStorage.setItem('uUID', Math.random().toString(24) + new Date());
+	}
+	
+	socket.emit('login', { uUID: window.localStorage.getItem('uUID') });
 	
 	// Connected (page first loaded)
 	socket.on('connected', (data) => {
@@ -10,7 +16,7 @@
 
 		// Update data
 		updateObjects(data, false, false);
-
+		
 		// Update view
 		$('#username_text').html(my_player.name);
 		$('#username_input').val(my_player.name);

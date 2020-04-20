@@ -9,6 +9,8 @@ class Player {
 		this.game_id = 0;
 		this.ready = false;
 		this.role = '';
+		this.connected = true;
+		this.token = '';
 
 		Object.assign(this, options);
 	}
@@ -59,6 +61,22 @@ class Player {
 
 	set role(role) {
 		this._role = role;
+	}
+
+	get connected() {
+		return this._connected;
+	}
+
+	set connected(connected) {
+		this._connected = connected;
+	}
+
+	get token() {
+		return this._token;
+	}
+
+	set token(token) {
+		this._token = token;
 	}
 };
 

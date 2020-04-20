@@ -9,7 +9,7 @@ app.use(express.static('.'));
 
 const Player = require('./player.js'),
 	Game = require('./game.js'),
-	connected_players = {},
+	all_players = {},
 	current_games = {},
 	all_roles = ["Drunk", "Insomniac", "Mason", "Mason", "Minion", "Robber", "Seer", "Troublemaker", "Villager", "Villager", "Villager", "Werewolf", "Werewolf"];
 	default_roles = [{
@@ -39,22 +39,35 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
 	console.log('A user connected!');
 
-	// Create player and send back to client
-	console.log('Creating player');
-	const player_name = generatePlayerName();
-	const p = new Player({ id: socket.id, name: player_name });
-	connected_players[socket.id] = p;
+	// Authenticate player or create new player
+	socket.on('login', (data) => {
+		for (let old_socket_id of Object.keys(all_players)) {
+			if (all_players[old_socket_id].token == data.uUID) {
+				all_players[socket.id] = all_players[old_socket_id];
+				all_players[socket.id].connected = true;
+				delete all_players[old_socket_id];
+				break;
+			}
+		}
 
-	socket.emit('connected', { player: p, all_roles: all_roles, default_roles: default_roles });
+		if (!all_players[socket.id]) {
+			// Create player and send back to client
+			console.log('Creating player');
+			const player_name = generatePlayerName();
+			all_players[socket.id] = new Player({ id: socket.id, name: player_name, token: data.uUID });
+		}
+	
+		socket.emit('connected', { player: all_players[socket.id], all_roles: all_roles, default_roles: default_roles });
+	});
 
 	// Player has changed their username
 	socket.on('usernameChanged', (name) => {
 		console.log('Changing username to: ' + name);
-		connected_players[socket.id].name = name;
+		all_players[socket.id].name = name;
 
-		let game_id = connected_players[socket.id].game_id;
+		let game_id = all_players[socket.id].game_id;
 		if (game_id > 0) {
-			current_games[game_id].players[connected_players[socket.id].index].name = name;
+			current_games[game_id].players[all_players[socket.id].index].name = name;
 			io.in(game_id).emit('playerNameChanged', { game: current_games[game_id] });
 		}
 	});
@@ -63,13 +76,13 @@ io.on('connection', (socket) => {
 	socket.on('createGame', (data) => {
 		console.log('Creating game');
 		const g = new Game({ roles: data.roles });
-		connected_players[socket.id].index = 1;
-		connected_players[socket.id].ready = false;
-		connected_players[socket.id].game_id = g.id;
-		g.players[1] = connected_players[socket.id];
+		all_players[socket.id].index = 1;
+		all_players[socket.id].ready = false;
+		all_players[socket.id].game_id = g.id;
+		g.players[1] = all_players[socket.id];
 		current_games[g.id] = g;
 
-		socket.emit('gameCreated', { player: connected_players[socket.id], game: g });
+		socket.emit('gameCreated', { player: all_players[socket.id], game: g });
 		socket.join(g.id);
 	});
 
@@ -98,31 +111,31 @@ io.on('connection', (socket) => {
 		// Add player to game
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length - 3; i++) {
 			if (!current_games[game_id].players[i]) {
-				connected_players[socket.id].index = i;
+				all_players[socket.id].index = i;
 				break;
 			}
 		}
-		connected_players[socket.id].game_id = game_id;
-		connected_players[socket.id].ready = false;
-		connected_players[socket.id].role = current_games[game_id].roles[connected_players[socket.id].index];
-		current_games[game_id].players[connected_players[socket.id].index] = connected_players[socket.id];
+		all_players[socket.id].game_id = game_id;
+		all_players[socket.id].ready = false;
+		all_players[socket.id].role = current_games[game_id].roles[all_players[socket.id].index];
+		current_games[game_id].players[all_players[socket.id].index] = all_players[socket.id];
 
 		switch (current_games[game_id].state) {
 			case 'GameOver':
-				socket.emit('gameOver', { player: connected_players[socket.id], game: current_games[game_id] });
+				socket.emit('gameOver', { player: all_players[socket.id], game: current_games[game_id] });
 				break;
 			case 'Morning':
-				socket.emit('morningStarted', { player: connected_players[socket.id], game: current_games[game_id] });
+				socket.emit('morningStarted', { player: all_players[socket.id], game: current_games[game_id] });
 				break;
 			case 'Night':
-				socket.emit('nightStarted', { player: connected_players[socket.id], game: current_games[game_id] });
+				socket.emit('nightStarted', { player: all_players[socket.id], game: current_games[game_id] });
 				break;
 			case 'Evening':
-				socket.emit('eveningStarted', { player: connected_players[socket.id], game: current_games[game_id] });
+				socket.emit('eveningStarted', { player: all_players[socket.id], game: current_games[game_id] });
 				break;
 			case 'Afternoon':
 			default:
-				socket.emit('gameJoined', { player: connected_players[socket.id], game: current_games[game_id] });
+				socket.emit('gameJoined', { player: all_players[socket.id], game: current_games[game_id] });
 				break;
 		}
 
@@ -139,7 +152,7 @@ io.on('connection', (socket) => {
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length; i++) {
 			if (i <= Object.keys(current_games[game_id].roles).length - 3) {
 				current_games[game_id].players[i].role = current_games[game_id].roles[i];
-				connected_players[current_games[game_id].players[i].id].role = current_games[game_id].roles[i];
+				all_players[current_games[game_id].players[i].id].role = current_games[game_id].roles[i];
 			}
 		}
 		console.log('Roles assigned', current_games[game_id].roles);
@@ -150,8 +163,8 @@ io.on('connection', (socket) => {
 	// Mark player as ready
 	socket.on('playerReady', (game_id) => {
 		console.log("Mark player as ready");
-		connected_players[socket.id].ready = true;
-		current_games[game_id].players[connected_players[socket.id].index].ready = true;
+		all_players[socket.id].ready = true;
+		current_games[game_id].players[all_players[socket.id].index].ready = true;
 
 		let num_ready = 0;
 		for (let i of Object.keys(current_games[game_id].players)) {
@@ -202,23 +215,23 @@ io.on('connection', (socket) => {
 			case 'drink':
 				console.log('Drank: ', data.index);
 				target = "Middle " + (data.index - 4);
-				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " drank!<br />Target - " + target);
+				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " drank!<br />Target - " + target);
 				break;
 			case 'reveal':
 				console.log('Revealed: ', data.index);
 				target = data.index < 5 ? current_games[data.game_id].players[data.index].name : "Middle " + (data.index - 4);
-				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " revealed a card.<br />Target - " + target);
+				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " revealed a card.<br />Target - " + target);
 				break;
 			case 'rob':
 				console.log('Robbed: ', data.index);
 				target = current_games[data.game_id].players[data.index].name;
-				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " robbed a card.<br />Target - " + target);
+				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " robbed a card.<br />Target - " + target);
 				break;
 			case 'swap':
 				console.log('Swapped: ', data.card_1, data.card_2);
 				target_1 = data.card_1 < 5 ? current_games[data.game_id].players[data.card_1].name : "Middle " + (data.card_1 - 4);
 				target_2 = data.card_2 < 5 ? current_games[data.game_id].players[data.card_2].name : "Middle " + (data.card_2 - 4);
-				current_games[data.game_id].log.push(time + ": " + connected_players[socket.id].name + " swapped cards.<br />Targets - " + target_1 + " & " + target_2);
+				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " swapped cards.<br />Targets - " + target_1 + " & " + target_2);
 				break;
 		};
 	});
@@ -276,7 +289,7 @@ io.on('connection', (socket) => {
 			// Reset player attributes
 			for (let i = 1; i <= Object.keys(current_games[data.game_id].roles).length - 3; i++) {
 				let player = current_games[data.game_id].players[i];
-				connected_players[player.id] = new Player({ id: player.id, name: player.name });
+				all_players[player.id] = new Player({ id: player.id, name: player.name });
 			}
 
 			io.in(data.game_id).emit('gameOver', { game: current_games[data.game_id], death_msg: death_msg, victory_msg: victory_msg });
@@ -290,17 +303,21 @@ io.on('connection', (socket) => {
 	socket.on('leaveGame', () => {
 		console.log('Player left game');
 
-		removePlayerFromGame(socket.id);
+		if (all_players[socket.id].game_id) {
+			removePlayerFromGame(socket.id);
+		}
 	});
 
 	// Player disconnected
 	socket.on('disconnect', () => {
 		console.log('user disconnected');
 
-		removePlayerFromGame(socket.id);
+		if (all_players[socket.id].game_id) {
+			removePlayerFromGame(socket.id);
+		}
 
-		delete connected_players[socket.id];
-		console.log('connected_players: ', connected_players);
+		all_players[socket.id].connected = false;
+		console.log('all_players: ', all_players);
 	});
 });
 	
@@ -327,9 +344,9 @@ const generatePlayerName = () => {
 };
 
 const removePlayerFromGame = (socket_id) => {
-	let game_id = connected_players[socket_id].game_id;
+	let game_id = all_players[socket_id].game_id;
 	if (game_id > 0) {
-		delete current_games[game_id].players[connected_players[socket_id].index];
+		delete current_games[game_id].players[all_players[socket_id].index];
 		io.in(game_id).emit('playerLeft', { game: current_games[game_id] });
 	}
 };
