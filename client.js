@@ -1,508 +1,436 @@
 (function(){
-	// Types of players
 	const socket = io.connect(),
-		debug = false;
-	let my_player, my_game;
+		debug = true,
+		action_duration = 3000;
+	let my_player, my_game, all_roles, default_roles;
 	
-	// Connected, save player info
+	// Connected (page first loaded)
 	socket.on('connected', (data) => {
-		updateObjects(data);
+		debugLog('Connected', data);
 
+		// Update data
+		updateObjects(data, false, false);
+
+		// Update view
 		$('#username_text').html(my_player.name);
 		$('#username_input').val(my_player.name);
+
+		// Create Roles on New Game section
+		createNewGameRoles();
+		createSelectable('#new_game .new_game_role_wrapper');
+		selectDefaultRoles();
 	});
 
 	// Redirect to home page
 	$('.homeLink').on('click', () => {
-		$('.game_phase').addClass('hidden');
-		$('#morning').removeClass('hidden');
+		debugLog('Home Link clicked');
 
-		// Reset everything
-		$('#ready_btn').removeClass('disabled').removeAttr('disabled');
-		$('#night_message').removeClass('hidden');
-		$('#morning_message').addClass('hidden');
-		$('#game_over_message').addClass('hidden');
-		$('#night .actions').removeClass('hidden');
-		$('#night .actions .action_wrapper').addClass('hidden');
-		$('#action_message').html('');
-		$('#night .actions input[type=button]').addClass('disabled').attr('disabled', 'disabled');
-		$('#vote_form').addClass('hidden');
-		$('#vote_player').removeAttr('disabled');
-		$("#vote_btn").removeAttr('disabled').removeClass('disabled');
-		$('.game_over_messages').addClass('hidden');
-		$('#victory_message').html('');
-		$('#death_message').html('');
-		$('#end_btn').addClass('hidden');
-		$('#game_log_wrapper').addClass('hidden');
-		$('#game_log').html('');
+		socket.emit('leaveGame'); // Emit leaving game
 
-		return false;
+		// Change view
+		resetView();
+		$('#home').removeClass('hidden');
+
+		// Create Roles on New Game section
+		createNewGameRoles();
+		createSelectable('#new_game .new_game_role_wrapper');
+		selectDefaultRoles();
+
+		return false; // Don't process link
 	});
 
 	// Edit username clicked, show text box
 	$('#edit_username').on('click', () => {
+		debugLog('Edit Username clicked');
+
+		// Change view
 		$('#username_text').addClass('hidden');
 		$('#username_input').removeClass('hidden');
 		$('#username_input').select();
-		return false;
+		
+		return false; // Don't process link
 	});
 
 	// Edit username - Enter pressed, save username & hide text box
 	$('#username_input').on('keypress', (e) => {
 		if (e.which == 13) { // Enter
-			const new_username = $('#username_input').val();
+			debugLog('Username Changed', $('#username_input').val());
+
+			// Update player name
+			my_player.name = $('#username_input').val();
+
+			// Update view
 			$('#username_input').addClass('hidden');
-			$('#username_text').html(new_username).removeClass('hidden');
+			$('#username_text').html(my_player.name).removeClass('hidden');
 
-			my_player.name = new_username;
-
-			socket.emit('usernameChanged', new_username);
+			// Emit success
+			socket.emit('usernameChanged', my_player.name);
 		}
 	});
 
 	// Host Game button clicked
-	$(document).on('submit', 'form#new_game_form', () => {
-		socket.emit('createGame');
-		return false;
+	$("#host_game_btn").on('click', () => {
+		debugLog('Host Game clicked');
+
+		// Validation
+		if ($('#new_game .ui-selected').length < 7) {
+			$('#new_game_message').removeClass('hidden').addClass('error').html('Please select at least 7 roles to begin.')
+			return;
+		} else if ($('#new_game .ui-selected').length > 13) {
+			$('#new_game_message').removeClass('hidden').addClass('error').html('Please select no more than 13 roles to begin.');
+			return;
+		}
+
+		$('#new_game_message').attr('class', 'hidden').html(''); // Reset errors
+
+		// Emit with selected roles
+		socket.emit('createGame', { roles: getNewGameRoles() });
 	});
 
 	// Join Game button clicked
 	$(document).on('submit', 'form#join_game_form', () => {
-		socket.emit('joinGame', $('#join_game_id').val());
-		$('#join_game_id').val('');
-		return false;
+		debugLog('Join Game clicked', $('#join_game_id').val());
+
+		socket.emit('joinGame', $('#join_game_id').val()); // Emit request
+		
+		return false; // Don't process form submission
 	});
 
 	// Game created
 	socket.on('gameCreated', (data) => {
-		$('.game_phase').addClass('hidden');
-		$('#afternoon').removeClass('hidden');
+		debugLog('Game Created', data);
 
-		updateObjects(data);
-		updatePlayerList();
+		// Update data
+		updateObjects(data, false, true);
 
-		$('#invite_game_id').html(my_game.id);
-		$('.label_player1').html(my_player.name);
+		// Change view
+		resetView();
+		$('#lobby').removeClass('hidden');
 	});
 
 	// Failed to join game
 	socket.on('gameJoinFailed', (error_message) => {
+		debugLog('Game Join failed', error_message);
+
 		$('#join_game .error_message').html(error_message).removeClass('hidden');
 	});
 
 	// Joined game
 	socket.on('gameJoined', (data) => {
-		$('.game_phase').addClass('hidden');
-		$('#afternoon').removeClass('hidden');
+		debugLog('Game joined', data);
 
-		updateObjects(data);
-		updatePlayerList();
-		
+		// Update data
+		updateObjects(data, false, true);
+
+		// Change view
+		resetView();
+		$('#lobby').removeClass('hidden');
 		$('#invite_game_id').html(my_game.id);
 	});
 
-	// Player joined, update player list
+	// Player joined, update data
 	socket.on('playerJoined', (data) => {
-		updateObjects(data);
-		updatePlayerList();
+		debugLog('Player joined', data);
+
+		// Update data
+		updateObjects(data, false, true);
 	});
 
 	// Player changed their username, update player list
 	socket.on('playerNameChanged', (data) => {
-		updateObjects(data);
-		updatePlayerList();
+		debugLog('Player name changed', data);
+
+		// Update data
+		updateObjects(data, false, true);
 	});
 
 	// Player left, update player list
 	socket.on('playerLeft', (data) => {
-		updateObjects(data);
-		updatePlayerList();
+		debugLog('Player left', data);
 
-		if (my_game.state == 'Afternoon') {
-			$('#begin_evening').addClass('hidden');
-		}
+		// Update data
+		updateObjects(data, false, true);
 	});
 
 	// Begin Evening button clicked
 	$('#begin_evening_btn').on('click', () => {
-		socket.emit('beginEvening', my_game.id);
-		return false;
+		debugLog("Begin Evening clicked");
+
+		socket.emit('beginEvening', my_game.id);  // Emit request
 	});
 
 	// Start Evening
 	socket.on('eveningStarted', (data) => {
+		debugLog('Evening Started', data);
+
+		// Update data
 		updateObjects(data);
+		
+		// Change view
+		resetView();
+		$('#game').removeClass('hidden');
+		$('#evening_message').removeClass('hidden');
+		$('#ready_wrapper').removeClass('hidden');
 
-		$('.game_id_text').html(my_game.id);
-		$('.game_phase').addClass('hidden');
-		$('#evening').removeClass('hidden');
-
+		// Show my card
 		$('#card_player' + my_player.index + ' > img.card').attr('src', 'images/' + my_game.roles[my_player.index] + '.png');
 	});
 
 	// Mark player as ready
 	$('#ready_btn').on('click', () => {
-		$('#ready_btn').attr('disabled', 'disabled').addClass('disabled');
+		debugLog('Ready clicked');
 
+		$('#ready_btn').attr('disabled', 'disabled').addClass('disabled'); // Disable ready button
+
+		// Mark player as ready
 		my_player.ready = true;
 		my_game.players[my_player.index].ready = true;
 
-		socket.emit('playerReady', my_game.id);
+		socket.emit('playerReady', my_game.id); // Emit readiness
 	});
 
 	// All players are ready, begin night
 	socket.on('nightStarted', (data) => {
 		debugLog('Night started', data);
+
+		// Update data
 		updateObjects(data);
 
-		$('img.card').attr('src', 'images/card.png'); // Flip all cards facedown
-		$('.game_id_text').html(my_game.id); // Update Game ID
-
-		// Show Night Phase
-		$('.game_phase').addClass('hidden');
-		$('#night').removeClass('hidden');
-
-		// Re-enable ready button for next game
-		$('#ready_btn').removeAttr('disabled').removeClass('disabled');
+		// Change view
+		resetView();
+		$('#game').removeClass('hidden');
+		$('#night_message').removeClass('hidden'); // Show Night Message
+		$('#game .actions').removeClass('hidden'); // Show Action buttons
 
 		// If host, show End Night button
 		if (my_player.index == 1) {
 			$('#end_btn').removeClass('hidden');
 		}
 
-		debugLog(my_player.role, my_player);
-		switch(my_player.role) {
-			case 'Insomniac':
-				debugLog('Insomniac');
-
-				$('#reveal_btn_wrapper').removeClass('hidden');
-				$('#night #card_player' + my_player.index).bind("mousedown", (e) => {
-					e.metaKey = true;
-				}).selectable({
-					selecting: () => {
-						$('#reveal_btn').removeClass('disabled').removeAttr('disabled');
-					},
-					unselected: (event, ui) => {
-						$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled');
-					},
-				});
-				break;
-			case 'Troublemaker':
-				debugLog('Troublemaker');
-
-				$('#swap_btn_wrapper').removeClass('hidden');
-				$('#night .player_card').bind("mousedown", (e) => {
-					e.metaKey = true;
-				}).selectable({
-					selecting: () => {
-						let num_selected = $(".ui-selected, .ui-selecting").length;
-						switch (num_selected) {
-							case 1:
-								break;
-							case 2:
-								$('#swap_btn').removeClass('disabled').removeAttr('disabled');
-								break;
-							case 3:
-							default:
-								$('.ui-selecting').removeClass("ui-selecting");
-								break;
-						}
-					},
-					unselected: (event, ui) => {
-						let num_selected = $(".ui-selected, .ui-selecting").length;
-						switch (num_selected) {
-							case 0:
-								break;
-							case 1:
-							default:
-								$('#swap_btn').addClass('disabled').attr('disabled', 'disabled');
-								break;
-						}
-					},
-				});
-				$('#night #card_player' + my_player.index).selectable("destroy");
-				break;
-			case 'Robber':
-				debugLog('Robber');
-
-				$('#rob_btn_wrapper').removeClass('hidden');
-				$('#night .player_card').bind("mousedown", (e) => {
-					e.metaKey = true;
-				}).selectable({
-					selecting: () => {
-						let num_selected = $(".ui-selected, .ui-selecting").length;
-						switch (num_selected) {
-							case 1:
-								$('#rob_btn').removeClass('disabled').removeAttr('disabled');
-								break;
-							case 2:
-							default:
-								$('.ui-selecting').removeClass("ui-selecting");
-								break;
-						}
-					},
-					unselected: (event, ui) => {
-						$('#rob_btn').addClass('disabled').attr('disabled', 'disabled');
-					},
-				});
-				$('#night #card_player' + my_player.index).selectable("destroy");
-				break;
-			case 'Werewolf':
-				debugLog('Werewolf');
-
-				// Count number of player-werewolves
-				let num_werewolves = 0;
-				for (let i = 1; i <= 4; i++) {
-					if (my_game.roles[i] == 'Werewolf') {
-						num_werewolves++;
-					}
-				}
-
-				if (num_werewolves == 1) {
-					$('#reveal_btn_wrapper').removeClass('hidden');
-					$('#night .middle_card').bind("mousedown", (e) => {
-						e.metaKey = true;
-					}).selectable({
-						selecting: () => {
-							let num_selected = $(".ui-selected, .ui-selecting").length;
-							switch (num_selected) {
-								case 1:
-									$('#reveal_btn').removeClass('disabled').removeAttr('disabled');
-									break;
-								case 2:
-								default:
-									$('.ui-selecting').removeClass("ui-selecting");
-									break;
-							}
-						},
-						unselected: (event, ui) => {
-							$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled');
-						},
-					});
-				} else if (num_werewolves == 2) {
-					$('#action_message').html('You are not alone. Look for your fellow werewolf.').attr('class', '');
-				}
-				break;
-			case 'Seer':
-				debugLog('Seer');
-
-				$('#reveal_btn_wrapper').removeClass('hidden');
-				$('#night .cards').bind("mousedown", (e) => {
-					e.metaKey = true;
-				}).selectable({
-					selecting: () => {
-						const num_selected = $(".ui-selected, .ui-selecting").length;
-						switch (num_selected) {
-							case 1:
-								if ($(".ui-selecting").parent().attr('id').split('_')[1].indexOf('player') !== -1) {
-									$('#reveal_btn').removeClass('disabled').removeAttr('disabled');
-								}
-								break;
-							case 2:
-								if ($(".ui-selected").parent().attr('id').split('_')[1].indexOf('player') !== -1 || $(".ui-selecting").parent().attr('id').split('_')[1].indexOf('player') !== -1) {
-									$('.ui-selecting').removeClass("ui-selecting");
-								} else {
-									$('#reveal_btn').removeClass('disabled').removeAttr('disabled');
-								}
-								break;
-							case 3:
-							default:
-								$('.ui-selecting').removeClass("ui-selecting");
-								break;
-						}
-					},
-					unselected: (event, ui) => {
-						const num_selected = $(".ui-selected, .ui-selecting").length;
-						switch (num_selected) {
-							case 0:
-								$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled');
-								break;
-							case 1:
-							default:
-								if ($(".ui-selected").parent().attr('id').split('_')[1].indexOf('middle') !== -1) {
-									$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled');
-								}
-								break;
-						}
-					},
-				});
-				$('#night #card_player' + my_player.index).selectable("destroy");
-				break;
-			case 'Villager':
-			default:
-				$('#action_message').html('Your role does not have an action.')
-				break;
-		}
+		displayRoleActions(); // Process action button & selectables logic
 	});
 
 	// Reveal card
 	$('#reveal_btn').on('click', () => {
 		debugLog('Reveal card');
 
-		let cards = $('.ui-selected');
-		$('#action_message').html('').attr('class', '');
+		let cards = $('.ui-selected'); // Get selected card(s)
+		$('#action_message').html('').attr('class', ''); // Reset
 
+		// Validate
 		if (cards.length > 2) {
 			$('#action_message').html('Invalid action. Try again.').addClass('error');
-			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, 3000);
+			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, action_duration); // Reset after delay
 			return;
 		}
 
+		// Perform Reveal logic
 		for (let card of cards) {
 			let card_index = $(card).attr('id').split('_')[1];
-			$(card).attr('src', 'images/' + my_game.roles[card_index] + '.png');
 
-			$(card).removeClass('ui-selected');
+			$(card).attr('src', 'images/' + my_game.roles[card_index] + '.png'); // Show card
+			$(card).removeClass('ui-selected'); // Deselect card
 
-			socket.emit('addToGameLog', { game_id: my_game.id, action: 'reveal', index: card_index });
+			socket.emit('addToGameLog', { game_id: my_game.id, action: 'reveal', index: card_index }); // Emit to Game Log
 		}
 
-		$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled');
-		$('#reveal_btn_wrapper').addClass('hidden');
+		// Cleanup view
+		$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable button
+		$('#reveal_btn_wrapper').addClass('hidden'); // Hide button
+
 		const c = cards.length > 1 ? 'Cards' : 'Card';
-		$('#action_message').html(c + ' successfully revealed!').addClass('success');
-		$('#night .ui-selectable').selectable("destroy");
+		$('#action_message').html(c + ' successfully revealed!').addClass('success'); // Display success message
+		$('#game .ui-selectable').selectable("destroy"); // Make cards unselectable
 
 		setTimeout(() => {
-			$('.card').attr('src', 'images/card.png');
-			$('#action_message').html('You have already completed your action.').attr('class', '');
-		}, 3000);
+			$('.card').attr('src', 'images/card.png'); // Reset cards
+			$('#action_message').html('You have already completed your action.').attr('class', ''); // Turn complete message
+		}, action_duration);
 	});
 
 	// Swap cards
 	$('#swap_btn').on('click', () => {
 		debugLog('Swap cards');
 		
-		let cards = $('.ui-selected');
-		$('#action_message').html('').attr('class', '');
+		let cards = $('.ui-selected'); // Get selected cards
+		$('#action_message').html('').attr('class', ''); // Reset
 
+		// Validate
 		if (cards.length != 2) {
 			$('#action_message').html('Invalid action. Try again.').addClass('error');
-			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, 3000);
+			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, action_duration); // Reset
 			return;
 		}
 
+		// Perform Swap logic
 		let id_1 = $(cards[0]).attr('id').split('_')[1];
 		let id_2 = $(cards[1]).attr('id').split('_')[1];
 
-		socket.emit('addToGameLog', { game_id: my_game.id, action: 'swap', card_1: id_1, card_2: id_2 });
-		socket.emit('swapCards', { game_id: my_game.id, card_1: id_1, card_2: id_2 });
+		socket.emit('addToGameLog', { game_id: my_game.id, action: 'swap', card_1: id_1, card_2: id_2 }); // Emit to Game Log
+		socket.emit('swapCards', { game_id: my_game.id, card_1: id_1, card_2: id_2 }); // Emit swap action
 
-		$('#action_message').html('Cards successfully swapped!').addClass('success');
+		$('#action_message').html('Cards successfully swapped!').addClass('success'); // Success message
 
-		cards.removeClass('ui-selected');
-		$('#swap_btn').addClass('disabled').attr('disabled', 'disabled');
-		$('#swap_btn_wrapper').addClass('hidden');
-		$('#night .ui-selectable').selectable("destroy");
+		// Cleanup view
+		cards.removeClass('ui-selected'); // Deselect card
+		$('#swap_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable action button
+		$('#swap_btn_wrapper').addClass('hidden'); // Hide action button
+		$('#game .ui-selectable').selectable("destroy"); // Make cards no longer selectable
 
-		setTimeout(() => { $('#action_message').html('You have already completed your action.').attr('class', ''); }, 3000);
+		setTimeout(() => { $('#action_message').html('You have already completed your action.').attr('class', ''); }, action_duration); // Turn complete message
 	});
 
 	// Rob card
 	$('#rob_btn').on('click', () => {
 		debugLog('Rob card');
 
-		let card = $('.ui-selected');
-		$('#action_message').html('').attr('class', '');
+		let card = $('.ui-selected'); // Get selected card
+		$('#action_message').html('').attr('class', ''); // Reset
 
+		// Validate
 		if (card.length != 1) {
 			$('#action_message').html('Invalid action. Try again.').addClass('error');
-			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, 3000);
+			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, action_duration); // Reset after delay
 			return;
 		}
 
+		// Perform Rob logic
 		const card_index = card.attr('id').split('_')[1];
-		card.attr('src', 'images/' + my_game.roles[card_index] + '.png');
+		card.attr('src', 'images/' + my_game.roles[card_index] + '.png'); // Show target card
 
-		socket.emit('addToGameLog', { game_id: my_game.id, action: 'rob', index: card_index });
-		socket.emit('swapCards', { game_id: my_game.id, card_1: card_index, card_2: my_player.index });
+		socket.emit('addToGameLog', { game_id: my_game.id, action: 'rob', index: card_index }); // Emit to Game Log
+		socket.emit('swapCards', { game_id: my_game.id, card_1: card_index, card_2: my_player.index }); // Emit swap action
 
-		$('#action_message').html('Card successfully robbed!').addClass('success');
+		$('#action_message').html('Card successfully robbed!').addClass('success'); // Success message
 
-		card.removeClass('ui-selected');
-		$('#rob_btn').addClass('disabled').attr('disabled', 'disabled');
-		$('#rob_btn_wrapper').addClass('hidden');
-		$('#night .ui-selectable').selectable("destroy");
+		// Cleanup view
+		card.removeClass('ui-selected'); // Deslect card
+		$('#rob_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable action button
+		$('#rob_btn_wrapper').addClass('hidden'); // Hide action button
+		$('#game .ui-selectable').selectable("destroy"); // Make cards no longer selectable
 		
+		// Hide target card, show player card after swap
 		setTimeout(() => {
 			card.attr('src', 'images/card.png');
 			debugLog(my_player.index, my_game.roles[my_player.index]);
 			$('#card_player' + my_player.index + ' > img.card').attr('src', 'images/' + my_game.roles[my_player.index] + '.png');
-		}, 1500);
+		}, (action_duration / 2));
 
 		setTimeout(() => { 
-			$('#card_player' + my_player.index + ' > img.card').attr('src', 'images/card.png');
-			$('#action_message').html('You have already completed your action.').attr('class', ''); 
-		}, 3000);
+			$('#card_player' + my_player.index + ' > img.card').attr('src', 'images/card.png'); // Flip player card back over
+			$('#action_message').html('You have already completed your action.').attr('class', ''); // Turn complete message
+		}, action_duration);
+	});
+
+	// Drink!
+	$('#drink_btn').on('click', () => {
+		debugLog('Drink!');
+
+		let card = $('.ui-selected'); // Select target card
+		$('#action_message').html('').attr('class', ''); // Reset
+
+		// Validate
+		if (card.length != 1) {
+			$('#action_message').html('Invalid action. Try again.').addClass('error');
+			setTimeout(() => { $('#action_message').html('').attr('class', ''); }, action_duration); // Reset after delay
+			return;
+		}
+
+		// Perform Drink logic
+		const card_index = card.attr('id').split('_')[1];
+
+		socket.emit('addToGameLog', { game_id: my_game.id, action: 'drink', index: card_index }); // Emit to Game Log
+		socket.emit('swapCards', { game_id: my_game.id, card_1: card_index, card_2: my_player.index }); // Emit swap action
+
+		$('#action_message').html('You successfully drank! Go sleep it off.').addClass('success'); // Success message
+
+		// Cleanup view
+		card.removeClass('ui-selected'); // Deslect card
+		$('#drink_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable action button
+		$('#drink_btn_wrapper').addClass('hidden'); // Hide action button
+		$('#game .ui-selectable').selectable("destroy"); // Make cards unselectable
+		
+		setTimeout(() => { $('#action_message').html('You have already completed your action.').attr('class', ''); }, action_duration); // Turn complete message
 	});
 
 	// Cards were swapped, update
 	socket.on('cardsSwapped', (data) => {
-		updateObjects(data);
+		debugLog('Cards Swapped', data);
+
+		// Update data
+		updateObjects(data, false, false);
 	});
 
 	// End Night button clicked
 	$('#end_btn').on('click', () => {
-		socket.emit('endNight', my_game.id);
+		debugLog('End Night clicked');
+
+		socket.emit('endNight', my_game.id); // Emit End Night
 	});
 
 	// Morning started
 	socket.on('morningStarted', (data) => {
-		debugLog('Morning started');
-		updateObjects(data);
-		
-		$('.game_phase').addClass('hidden');
-		$('#night').removeClass('hidden');
+		debugLog('Morning started', data);
 
-		$("#night .cards").selectable();
-		$('#night .cards').selectable("destroy");
-		$('#end_btn').addClass('hidden');
-		$('#vote_form').removeClass('hidden');
-		$('#night .actions').addClass('hidden');
-		$('#night_message').addClass('hidden');
-		$('#morning_message').removeClass('hidden');
+		// Update data
+		updateObjects(data);
+
+		// Change view
+		resetView();
+		$('#game').removeClass('hidden');
+		$('#morning_message').removeClass('hidden'); // Show Morning Message
+		$('#vote_form').removeClass('hidden'); // Show Vote Form
 	});
 
 	// Submit vote
 	$('#vote_btn').on('click', () => {
-		const player = $('#vote_player').val();
+		debugLog('Vote Button clicked');
 
-		$("#vote_btn").attr('disabled', 'disabled').addClass('disabled');
-		$('#vote_player').attr('disabled', 'disabled');
+		$("#vote_btn").attr('disabled', 'disabled').addClass('disabled'); // Disable Vote button
+		$('#vote_player').attr('disabled', 'disabled'); // Disable vote dropdown
 
-		socket.emit('playerVoted', { game_id: my_game.id, player: player });
+		socket.emit('playerVoted', { game_id: my_game.id, player: $('#vote_player').val() }); // Emit Vote action
 	});
 
 	// Game over, show messages and game log
 	socket.on('gameOver', (data) => {
+		debugLog('Game Over', data);
+
+		// Update data
 		updateObjects(data);
 
-		$('#morning_message').addClass('hidden');
-		$('#game_over_message').removeClass('hidden');
+		// Change view
+		resetView();
+		$('#game').removeClass('hidden');
+		$('#game_over_message').removeClass('hidden'); // Show Game Over Message
+		$('.game_over_messages').removeClass('hidden'); // Show Victory/Death Messages
 
-		$('.actions').addClass('hidden');
-		$('#vote_form').addClass('hidden');
-		$('.game_over_messages').removeClass('hidden');
+		$('#victory_message').html(data.victory_msg); // Display victory message
+		$('#death_message').html(data.death_msg); // Display death message
 
-		$('#victory_message').html(data.victory_msg);
-		$('#death_message').html(data.death_msg);
-
-		for (let i = 1; i <= 7; i++) {
+		// Flip all cards faceup
+		for (let i = 1; i <= Object.keys(my_game.roles).length; i++) {
 			$('#card_' + i).attr('src', 'images/' + my_game.roles[i] + '.png');
 		}
 
-		let game_log_height = $('#middle_column').height() - $('#game_id_wrapper').height();
-		$('#game_log_wrapper').css('height', game_log_height).removeClass("hidden");
+		// Display & populate Game Log
+		$('#game_log_wrapper').removeClass("hidden");
 		$('#game_log').html(my_game.log.join('<hr />'));
 	})
 
-	const updateObjects = (objects = {}) => {
+	const updateObjects = (objects = {}, refresh_board = true, refresh_players = true) => {
+		debugLog('Update Objects');
+
+		// Update Player
 		if (objects.player) {
 			my_player = new Player(objects.player);
 		}
+
+		// Update Game
 		if (objects.game) {
 			my_game = new Game(objects.game);
 
+			// If Player not updated, find current player in Game and update
 			if (!objects.player) {
 				for (let k of Object.keys(my_game.players)) {
 					const p = new Player(my_game.players[k]);
@@ -512,69 +440,495 @@
 				}
 			}
 		}
+
+		// Update all_roles
+		if (objects.all_roles) {
+			all_roles = objects.all_roles;
+		}
+
+		// Update default roles
+		if (objects.default_roles) {
+			default_roles = objects.default_roles;
+		}
+
+		if (refresh_board) {
+			buildGameBoard(); // Build game board
+		}
+		if (refresh_players) {
+			updatePlayerList(); // Update player list
+		}
 	}
 
 	const updatePlayerList = () => {
-		debugLog('Update player list');
-		let four_players = true;
+		debugLog('Update Player List');
 
+		if (!my_game || !my_game.roles || Object.keys(my_game.roles).length == 0) { return; }
+
+		let full_room = true;
+
+		// Reset player lists
 		$('#vote_player').empty();
+		$('#player_list').html('');
+		$('#role_list_cards').html('');
 
-		for (let i = 1; i <= 4; i++) {
-			let html = '';
+		// Populate with player names
+		for (let i = 1; i <= Object.keys(my_game.roles).length - 3; i++) {
+			// Create UL for Lobby
+			const span_label = $('<span />', {
+				class: "label_player" + i
+			});
+			const span_text = $('<span />', {
+				text: (i == 1 ? 'Host' : 'Player ' + i) + ': ',
+				class: "text_player",
+			})
+			const li = $('<li />').append(span_text).append(span_label);
+			$('#player_list').append(li);
+
 			if (my_game.players[i]) {
 				let p = new Player(my_game.players[i]);
-				html = p.name;
 
+				// Voting dropdown - Skip Self
 				if (p.id == my_player.id) {
 					my_player.index = p.index;
 				} else {
 					$('#vote_player').append($("<option></option>").attr("value", p.index).text(p.name));
 				}
-			} else {
-				four_players = false;
-			}
 
-			$('.label_player' + i).html(html);
+				// Put current name in Player labels
+				$('.label_player' + i).html(p.name);
+			} else {
+				full_room = false;
+				$('.label_player' + i).html('');
+			}
 		}
 
-		$('.game_id_text').html(my_game.id);
+		// Create Role List in Lobby
+		for (let i = 1; i <= Object.keys(my_game.roles).length; i++) {
+			const img = $('<img />', {
+				src: 'images/' + my_game.roles[i] + '.png',
+				alt: my_game.roles[i],
+			});
+			$('#role_list_cards').append(img);
+		}
 
-		if (my_game.state == 'Afternoon' && my_player.index == 1 && four_players) {
+		// Create Preview of roles in Game view
+		let title = [];
+		for (let key of Object.keys(my_game.roles)) {
+			title.push(my_game.roles[key]);
+		}
+		title.sort();
+		$('.game_id_text').html(my_game.id).attr('title', title.join("\n"));
+
+		// Show/Hide "Begin Evening" button for host
+		if (my_game.state == 'Afternoon' && my_player.index == 1 && full_room) {
 			$('#begin_evening').removeClass('hidden');
+		}
+		if (my_game.state != 'Afternoon' || my_player.index != 1 || !full_room) {
+			$('#begin_evening').addClass('hidden');
 		}
 	};
 
-	const updateNightButtons = () => {
-		let num_selected = $(".ui-selected, .ui-selecting").length;
-		switch (num_selected) {
-			case 0:
-				$('#reveal_btn').addClass('disabled');
-				$('#reveal_btn').attr('disabled', 'disabled');
-				$('#swap_btn').addClass('disabled');
-				$('#swap_btn').attr('disabled', 'disabled');
-				break;
-			case 1:
-				$('#reveal_btn').removeClass('disabled');
-				$('#reveal_btn').removeAttr('disabled');
-				$('#swap_btn').addClass('disabled');
-				$('#swap_btn').attr('disabled', 'disabled');
-				break;
-			case 2:
-				$('#reveal_btn').addClass('disabled');
-				$('#reveal_btn').attr('disabled', 'disabled');
-				$('#swap_btn').removeClass('disabled');
-				$('#swap_btn').removeAttr('disabled');
-				break;
-			case 3:
-				$('#reveal_btn').addClass('disabled');
-				$('#reveal_btn').attr('disabled', 'disabled');
-				$('#swap_btn').removeClass('disabled');
-				$('#swap_btn').removeAttr('disabled');
+	const resetView = () => {
+		$('.game_phase').addClass('hidden'); // Hide all game phases
+		$('#new_game .new_game_role_wrapper').selectable(); // Initialize to avoid errors
+		$('#new_game .new_game_role_wrapper').selectable('destroy'); // No longer selectable
+		$('#new_game .ui-selected').removeClass('ui-selected'); // Remove class
+		$('#join_game_id').val(''); // Reset
+		$('img.card').attr('src', 'images/card.png'); // Flip all cards facedown
+		$('#game .message').addClass('hidden'); // Hide all night messages
+		$('.action_wrapper').addClass('hidden'); // Hide all action buttons
+		$('#vote_form').addClass('hidden'); // Hide Vote Form
+		$('#game .actions').addClass('hidden'); // Hide Action buttons
+		$('.game_over_messages').addClass('hidden'); // Hide Victory/Death Messages
+		$('#game_log_wrapper').addClass("hidden"); // Hide Game Log
+		$('#ready_btn').removeAttr('disabled').removeClass('disabled'); // Enable ready button
+		$('#ready_wrapper').addClass('hidden');
+		$('#end_btn').addClass('hidden'); // Hide End Night button
+		$("#game .cards").selectable(); // Initialize to avoid errors
+		$('#game .cards').selectable("destroy"); // Make all cards not selectable
+		$('#game .ui-selected').removeClass('ui-selected'); // Remove class
+		$('#action_message').html(''); // Reset action message
+		$("#vote_btn").removeAttr('disabled').removeClass('disabled'); // Enable Vote button
+		$('#vote_player').removeAttr('disabled'); // Enable vote dropdown
+		
+	};
 
-				$('.ui-selecting').removeClass("ui-selecting");
-				break;
+	const createNewGameRoles = () => {
+		$("#new_game_roles").html('');
+
+		let last_role = '';
+		let role_count = 1;
+		for (let role of all_roles) {
+			if (role == last_role) {
+				role_count++;
+			} else {
+				last_role = role;
+				role_count = 1;
+			}
+
+			const span = $('<span />', {
+				class: 'new_game_role_wrapper',
+			});
+			const img = $('<img />', {
+				id: 'new_game_role_' + role + '_' + role_count,
+				class: 'new_game_role',
+				src: 'images/' + role + '.png',
+				alt: role,
+			});
+			
+			span.append(img);
+			$("#new_game_roles").append(span);
 		}
+	};
+
+	const createSelectable = (selector, selecting = () => {}, unselected = () => {}) => {
+		$(selector).bind("mousedown", (e) => {
+			e.metaKey = true;
+		}).selectable({
+			selecting: selecting,
+			unselected: unselected,
+		});
+	};
+
+	const selectDefaultRoles = () => {
+		for (let role of default_roles) {
+			for (let i = 1; i <= role.count; i++) {
+				$('#new_game_role_' + role.name + '_' + i).addClass('ui-selected');
+			}
+		}
+	};
+
+	const getNewGameRoles = () => {
+		const selected = $('#new_game .ui-selected');
+		const roles = {};
+		let i = 1;
+
+		for (let v of selected) {
+			roles[i++] = $(v).attr('id').split('_')[3];
+		}
+		
+		return roles;
+	}
+
+	const buildGameBoard = () => {
+		$('#game_board').html('');
+		if (!my_game || !my_game.roles || Object.keys(my_game.roles).length == 0) { return; }
+
+		const num_players = Object.keys(my_game.roles).length - 3;
+		const num_top_row = Math.ceil((num_players - 2) / 2);
+		const num_bottom_row = Math.floor((num_players - 2) / 2);
+
+		// Create top row
+		const top_row = $('<div />', { class: 'row' });
+		for (let i = 0; i < num_top_row; i++) {
+			let col_width = '';
+			switch (num_top_row) {
+				case 4:
+					col_width = 'three';
+					break;
+				case 3:
+					col_width = 'four';
+					break;
+				case 2:
+					col_width = 'six';
+					break;
+				case 1:
+				default:
+					col_width = 'twelve';
+					break;
+			}
+
+			// Create top row elements
+			const col = $('<div />', { class: col_width + ' columns center' });
+			const col_index = num_bottom_row + 2 + i;
+			const col_label = $('<p />', { class: 'label_player' + col_index });
+			const col_card_wrapper = $('<p />', { class: 'cards player_card', id: 'card_player' + col_index });
+			const col_card_img = $('<img />', {
+				src: 'images/card.png',
+				alt: 'Card',
+				class: 'card',
+				id: 'card_' + col_index,
+			});
+
+			// Append to doc
+			col_card_wrapper.append(col_card_img);
+			col.append(col_label).append(col_card_wrapper);
+			top_row.append(col);
+		}
+
+		// Create middle row
+		const middle_row = $('<div />', { class: 'row' });
+
+		const middle_col_1 = $('<div />', { class: 'three columns center' });
+		const middle_col_index_1 = num_bottom_row + 1;
+		const middle_col_label_1 = $('<p />', { class: 'label_player' + middle_col_index_1 });
+		const middle_col_card_wrapper_1 = $('<p />', { class: 'cards player_card', id: 'card_player' + middle_col_index_1 });
+		const middle_col_card_img_1 = $('<img />', {
+			src: 'images/card.png',
+			alt: 'Card',
+			class: 'card',
+			id: 'card_' + middle_col_index_1,
+		});
+
+		// Append to doc
+		middle_col_card_wrapper_1.append(middle_col_card_img_1);
+		middle_col_1.append(middle_col_label_1).append(middle_col_card_wrapper_1);
+		middle_row.append(middle_col_1);
+
+		// "Middle" cards
+		for (let i = 0; i < 3; i++) {
+			const middle_col = $('<div />', { class: 'two columns center' });
+			const middle_col_index = i + 1;
+			const middle_col_label = $('<p />', { html: '&nbsp;' });
+			const middle_col_card_wrapper = $('<p />', { class: 'cards middle_card', id: 'card_middle' + middle_col_index });
+			const middle_col_card_img = $('<img />', {
+				src: 'images/card.png',
+				alt: 'Card',
+				class: 'card',
+				id: 'card_' + (num_players + middle_col_index),
+			});
+
+			// Append to doc
+			middle_col_card_wrapper.append(middle_col_card_img);
+			middle_col.append(middle_col_label).append(middle_col_card_wrapper);
+			middle_row.append(middle_col);
+		}
+
+		const middle_col_2 = $('<div />', { class: 'three columns center' });
+		const middle_col_index_2 = num_bottom_row + 1 + num_top_row + 1;
+		const middle_col_label_2 = $('<p />', { class: 'label_player' + middle_col_index_2 });
+		const middle_col_card_wrapper_2 = $('<p />', { class: 'cards player_card', id: 'card_player' + middle_col_index_2 });
+		const middle_col_card_img_2 = $('<img />', {
+			src: 'images/card.png',
+			alt: 'Card',
+			class: 'card',
+			id: 'card_' + middle_col_index_2,
+		});
+
+		// Append to doc
+		middle_col_card_wrapper_2.append(middle_col_card_img_2);
+		middle_col_2.append(middle_col_label_2).append(middle_col_card_wrapper_2);
+		middle_row.append(middle_col_2);
+
+		// Create bottom row
+		const bottom_row = $('<div />', { class: 'row' });
+		for (let i = num_bottom_row - 1; i >= 0; i--) {
+			let col_width = '';
+			switch (num_bottom_row) {
+				case 4:
+					col_width = 'three';
+					break;
+				case 3:
+					col_width = 'four';
+					break;
+				case 2:
+					col_width = 'six';
+					break;
+				case 1:
+				default:
+					col_width = 'twelve';
+					break;
+			}
+
+			// Create bottom row elements
+			const col = $('<div />', { class: col_width + ' columns center' });
+			const col_index = i + 1;
+			const col_label = $('<p />', { class: 'label_player' + col_index });
+			const col_card_wrapper = $('<p />', { class: 'cards player_card', id: 'card_player' + col_index });
+			const col_card_img = $('<img />', {
+				src: 'images/card.png',
+				alt: 'Card',
+				class: 'card',
+				id: 'card_' + col_index,
+			});
+
+			// Append to doc
+			col_card_wrapper.append(col_card_img);
+			col.append(col_label).append(col_card_wrapper);
+			bottom_row.append(col);
+		}
+
+		$('#game_board').append(top_row).append(middle_row).append(bottom_row);
+	};
+
+	const displayRoleActions = () => {
+		debugLog('Display Role Actions', my_player.role, my_player);
+
+		switch(my_player.role) {
+			case 'Drunk':
+				debugLog('Drunk');
+
+				$('#drink_btn_wrapper').removeClass('hidden'); // Show action button
+
+				createSelectable('#game .middle_card', () => {
+					switch ($(".ui-selected, .ui-selecting").length) {
+						case 1:
+							$('#drink_btn').removeClass('disabled').removeAttr('disabled'); // Enable button
+							break;
+						case 2:
+						default:
+							$('.ui-selecting').removeClass("ui-selecting"); // Don't allow selecting
+							break;
+					}
+				}, () => {
+					$('#drink_btn').addClass('disabled').attr('disabled', 'disabled');
+				});
+				break;
+			case 'Insomniac':
+				debugLog('Insomniac');
+
+				$('#reveal_btn_wrapper').removeClass('hidden'); // Show action button
+
+				createSelectable('#game #card_player' + my_player.index, () => {
+					$('#reveal_btn').removeClass('disabled').removeAttr('disabled'); // Enable button
+				}, () => {
+					$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable button
+				});
+				break;
+			case 'Mason':
+				debugLog('Mason');
+
+				if (countPlayerRoles('Mason') == 1) {
+					$('#action_message').html('You are the only Mason.');
+				} else {
+					$('#action_message').html('You are not alone. Look for your fellow Mason.');
+				}
+				break;
+			case 'Troublemaker':
+				debugLog('Troublemaker');
+
+				$('#swap_btn_wrapper').removeClass('hidden'); // Show action button
+
+				createSelectable('#game .player_card', () => {
+					switch ($(".ui-selected, .ui-selecting").length) {
+						case 1:
+							break; // Do nothing
+						case 2:
+							$('#swap_btn').removeClass('disabled').removeAttr('disabled'); // Enable button
+							break;
+						case 3:
+						default:
+							$('.ui-selecting').removeClass("ui-selecting"); // Don't allow selecting
+							break;
+					}
+				}, () => {
+					switch ($(".ui-selected, .ui-selecting").length) {
+						case 0:
+							break; // Do nothing
+						case 1:
+						default:
+							$('#swap_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable button
+							break;
+					}
+				});
+
+				$('#game #card_player' + my_player.index).selectable("destroy"); // Disable for current player's card
+				break;
+			case 'Robber':
+				debugLog('Robber');
+
+				$('#rob_btn_wrapper').removeClass('hidden'); // Show action button
+
+				createSelectable('#game .player_card', () => {
+					switch ($(".ui-selected, .ui-selecting").length) {
+						case 1:
+							$('#rob_btn').removeClass('disabled').removeAttr('disabled'); // Enable button
+							break;
+						case 2:
+						default:
+							$('.ui-selecting').removeClass("ui-selecting"); // Don't allow selecting
+							break;
+					}
+				}, () => {
+					$('#rob_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable button
+				});
+
+				$('#game #card_player' + my_player.index).selectable("destroy"); // Disable for current player's card
+				break;
+			case 'Werewolf':
+				debugLog('Werewolf');
+
+				if (countPlayerRoles('Werewolf') == 1) {
+					$('#reveal_btn_wrapper').removeClass('hidden'); // Enable button
+
+					createSelectable('#game .middle_card', () => {
+						switch ($(".ui-selected, .ui-selecting").length) {
+							case 1:
+								$('#reveal_btn').removeClass('disabled').removeAttr('disabled'); // Enable button
+								break;
+							case 2:
+							default:
+								$('.ui-selecting').removeClass("ui-selecting"); // Don't allow selecting
+								break;
+						}
+					}, () => {
+						$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable button
+					});
+				} else {
+					$('#action_message').html('You are not alone. Look for your fellow werewolf.').attr('class', '');
+				}
+				break;
+			case 'Seer':
+				debugLog('Seer');
+
+				$('#reveal_btn_wrapper').removeClass('hidden'); // Show action button
+
+				createSelectable('#game .cards', () => {
+					switch ($(".ui-selected, .ui-selecting").length) {
+						case 1:
+							// If selecting a player card, enable button
+							if ($(".ui-selecting").parent().attr('id').split('_')[1].indexOf('player') !== -1) {
+								$('#reveal_btn').removeClass('disabled').removeAttr('disabled');
+							}
+							break;
+						case 2:
+							// If player card is selected or selecting a player card, don't allow selecting
+							if ($(".ui-selected").parent().attr('id').split('_')[1].indexOf('player') !== -1 || $(".ui-selecting").parent().attr('id').split('_')[1].indexOf('player') !== -1) {
+								$('.ui-selecting').removeClass("ui-selecting");
+							} else {
+								// Otherwise (2 middle cards) disable button
+								$('#reveal_btn').removeClass('disabled').removeAttr('disabled');
+							}
+							break;
+						case 3:
+						default:
+							$('.ui-selecting').removeClass("ui-selecting"); // Don't allow selecting
+							break;
+					}
+				}, () => {
+					switch ($(".ui-selected, .ui-selecting").length) {
+						case 0:
+							$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled'); // Disable button
+							break;
+						case 1:
+						default:
+							// If selected card is a middle card, disable button
+							if ($(".ui-selected").parent().attr('id').split('_')[1].indexOf('middle') !== -1) {
+								$('#reveal_btn').addClass('disabled').attr('disabled', 'disabled');
+							}
+							break;
+					}
+				});
+
+				$('#game #card_player' + my_player.index).selectable("destroy"); // Disable for current player's card
+				break;
+			case 'Minion':
+			case 'Villager':
+			default:
+				$('#action_message').html('Your role does not have an action.'); // No action for these roles
+				break;
+		};
+	};
+
+	const countPlayerRoles = (role) => {
+		let count = 0;
+		for (let i = 1; i <= Object.keys(my_game.roles).length - 3; i++) {
+			if (my_game.roles[i] == role) {
+				count++;
+			}
+		}
+
+		return count;
 	};
 
 	const debugLog = (...args) => {

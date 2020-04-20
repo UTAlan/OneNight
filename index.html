@@ -26,7 +26,7 @@
 				</div>
 			</div>
 
-			<div class="game_phase" id="morning">
+			<div class="game_phase" id="home">
 				<div class="row">
 					<div class="twelve columns message" id="welcome_message">
 						<p>Good morning! Please make a selection.</p>
@@ -35,108 +35,57 @@
 
 				<div class="row">
 					<div class="six columns" id="new_game">
-						<form id="new_game_form">
-							<input type="submit" value="Host a New Game" />
-						</form>
+						<input type="button" id="host_game_btn" value="Host a New Game" />
+						<p id="new_game_message" class="hidden"></p>
+
+						<div id="new_game_roles"></div>
 					</div>
+
 					<div class="six columns" id="join_game">
 						<p class="error_message hidden"></p>
+						
 						<form id="join_game_form">
-							<input type="text" id="join_game_id" placeholder="Game ID" required />
-							<br />
-							<input type="submit" value="Join an Existing Game" />
+							<p><input type="text" id="join_game_id" placeholder="Game ID" required /></p>
+							<p><input type="submit" value="Join an Existing Game" /></p>
 						</form>
 					</div>
 				</div>
 			</div>
 
-			<div class="game_phase hidden" id="afternoon">
+			<div class="game_phase hidden" id="lobby">
 				<div class="row">
-					<div class="twelve columns message" id="afternoon_message">
+					<div class="twelve columns message" id="lobby_message">
 						<p>Good afternoon! Please wait for more players to join.</p>
-						<p>You can invite players using the Game ID: <span id="invite_game_id"></span></p>
+						<p>You can invite players using the Game ID: <span id="invite_game_id" class="game_id_text"></span></p>
+					</div>
+				</div>
 
-						<ul id="player_list">
-							<li>Host: <span class="label_player1"></span></li>
-							<li>Player 2: <span class="label_player2"></span></li>
-							<li>Player 3: <span class="label_player3"></span></li>
-							<li>Player 4: <span class="label_player4"></span></li>
-						</ol>
+				<div class="row">
+					<div class="six columns center" id="lobby_player_list">
+						<ul id="player_list"></ul>
 
 						<div class="hidden" id="begin_evening"><input type="button" id="begin_evening_btn" value="Begin Evening" /></div>
 					</div>
-				</div>
-			</div>
 
-			<div class="game_phase hidden" id="evening">
-				<div class="row">
-					<div class="twelve columns message" id="evening_message">
-						<p>Good evening! Memorize your role, then click Ready.</p>
-					</div>
-				</div>
+					<div class="six columns" id="lobby_role_list">
+						<p id="role_list_header">Roles</p>
 
-				<div class="row">
-					<div class="four columns center">
-						<p class="ready"><input type="button" id="ready_btn" value="Ready" /></p>
-					</div>
-					<div class="four columns center">
-						<p class="label_player3"></p>
-						<p id="card_player3"><img src="images/card.png" alt="Card" class="card" /></p>
-					</div>
-					<div class="four columns center">
-						<p><span class="game_id_label">Game ID:</span> <span class="game_id_text"></span></p>
-					</div>
-				</div>
-				<div class="row">
-					<div class="three columns center">
-						<p class="label_player2"></p>
-						<p id="card_player2"><img src="images/card.png" alt="Card" class="card" /></p>
-					</div>
-					<div class="two columns center">
-						<p>&nbsp;</p>
-						<p id="card_middle1"><img src="images/card.png" alt="Card" class="card" /></p>
-					</div>
-					<div class="two columns center">
-						<p>&nbsp;</p>
-						<p id="card_middle2"><img src="images/card.png" alt="Card" class="card" /></p>
-					</div>
-					<div class="two columns center">
-						<p>&nbsp;</p>
-						<p id="card_middle3"><img src="images/card.png" alt="Card" class="card" /></p>
-					</div>
-					<div class="three columns center">
-						<p class="label_player4"></p>
-						<p id="card_player4"><img src="images/card.png" alt="Card" class="card" /></p>
-					</div>
-				</div>
-				<div class="row">
-					<div class="twelve columns center">
-						<p class="label_player1"></p>
-						<p id="card_player1"><img src="images/card.png" alt="Card" class="card" /></p>
+						<p id="role_list_cards"></p>
 					</div>
 				</div>
 			</div>
 
-			<div class="game_phase hidden" id="night">
-				<div class="row">
-					<div class="twelve columns message" id="night_message">
-						<p>Good night! Use the app and perform your actions when prompted.</p>
-					</div>
-					<div class="twelve columns message hidden" id="morning_message">
-						<p>Good morning! Submit your vote at the end of the day phase.</p>
-					</div>
-					<div class="twelve columns message hidden" id="game_over_message">
-						<p>Game over!</p>
-					</div>
-				</div>
-
+			<div class="game_phase hidden" id="game">
 				<div class="row">
 					<div class="four columns center">
-						<div class="actions">
+						<p id="ready_wrapper" class="hidden"><input type="button" id="ready_btn" value="Ready" /></p>
+
+						<div class="actions hidden">
 							<p><strong>Action:</strong></p>
 							<p id="reveal_btn_wrapper" class="action_wrapper hidden"><input type="button" id="reveal_btn" value="Reveal" class="disabled" disabled="disabled" /></p>
 							<p id="swap_btn_wrapper" class="action_wrapper hidden"><input type="button" id="swap_btn" value="Swap" class="disabled" disabled="disabled" /></p>
 							<p id="rob_btn_wrapper" class="action_wrapper hidden"><input type="button" id="rob_btn" value="Rob" class="disabled" disabled="disabled" /></p>
+							<p id="drink_btn_wrapper" class="action_wrapper hidden"><input type="button" id="drink_btn" value="Drink!" class="disabled" disabled="disabled" /></p>
 							<p id="action_message"></p>
 						</div>
 
@@ -153,53 +102,30 @@
 						</form>
 
 						<h3 class="game_over_messages hidden" id="victory_message"></h3>
-
 						<p class="game_over_messages hidden" id="death_message"></p>
 					</div>
-					<div class="four columns center" id="middle_column">
-						<p class="label_player3"></p>
-						<p class="cards player_card" id="card_player3"><img src="images/card.png" alt="Card" class="card" id="card_3" /></p>
+
+					<div class="four columns center">
+						<p class="message" id="evening_message">Good evening!<br />Memorize your role, then click Ready.</p>
+						<p class="message hidden" id="night_message">Good night!<br />Use the app and perform your actions when prompted.</p>
+						<p class="message hidden" id="morning_message">Good morning!<br />Submit your vote at the end of the day phase.</p>
+						<p class="message hidden" id="game_over_message">Game over!</p>
 					</div>
+
 					<div class="four columns center">
 						<p id="game_id_wrapper"><span class="game_id_label">Game ID:</span> <span class="game_id_text"></span></p>
-
-						<p><input type="button" id="end_btn" value="End Night" class="hidden" /></p>
 
 						<div class="hidden" id="game_log_wrapper">
 							<span id="game_log_header">Game Log</span>
 							<hr />
 							<div id="game_log"></div>
 						</div>
+
+						<p><input type="button" id="end_btn" value="End Night" class="hidden" /></p>
 					</div>
 				</div>
-				<div class="row">
-					<div class="three columns center">
-						<p class="label_player2"></p>
-						<p class="cards player_card" id="card_player2"><img src="images/card.png" alt="Card" class="card" id="card_2" /></p>
-					</div>
-					<div class="two columns center">
-						<p>&nbsp;</p>
-						<p class="cards middle_card" id="card_middle1"><img src="images/card.png" alt="Card" class="card" id="card_5" /></p>
-					</div>
-					<div class="two columns center">
-						<p>&nbsp;</p>
-						<p class="cards middle_card" id="card_middle2"><img src="images/card.png" alt="Card" class="card" id="card_6" /></p>
-					</div>
-					<div class="two columns center">
-						<p>&nbsp;</p>
-						<p class="cards middle_card" id="card_middle3"><img src="images/card.png" alt="Card" class="card" id="card_7" /></p>
-					</div>
-					<div class="three columns center">
-						<p class="label_player4"></p>
-						<p class="cards player_card" id="card_player4"><img src="images/card.png" alt="Card" class="card" id="card_4" /></p>
-					</div>
-				</div>
-				<div class="row">
-					<div class="twelve columns center">
-						<p class="label_player1"></p>
-						<p class="cards player_card" id="card_player1"><img src="images/card.png" alt="Card" class="card" id="card_1" /></p>
-					</div>
-				</div>
+
+				<div id="game_board"></div>
 			</div>
 		</div>
 
