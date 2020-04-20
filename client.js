@@ -1,6 +1,6 @@
 (function(){
 	const socket = io.connect(),
-		debug = true,
+		debug = false,
 		action_duration = 3000;
 	let my_player, my_game, all_roles, default_roles;
 

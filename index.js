@@ -9,6 +9,7 @@ app.use(express.static('.'));
 
 const Player = require('./player.js'),
 	Game = require('./game.js'),
+	debug = true,
 	all_players = {},
 	current_games = {},
 	all_roles = ["Drunk", "Insomniac", "Mason", "Mason", "Minion", "Robber", "Seer", "Troublemaker", "Villager", "Villager", "Villager", "Werewolf", "Werewolf"];
@@ -41,13 +42,15 @@ io.on('connection', (socket) => {
 
 	// Authenticate player or create new player
 	socket.on('login', (data) => {
-		for (let old_socket_id of Object.keys(all_players)) {
-			if (all_players[old_socket_id].token == data.uUID) {
-				all_players[socket.id] = all_players[old_socket_id];
-				all_players[socket.id].id = socket.id;
-				all_players[socket.id].connected = true;
-				delete all_players[old_socket_id];
-				break;
+		if (!debug) {
+			for (let old_socket_id of Object.keys(all_players)) {
+				if (all_players[old_socket_id].token == data.uUID) {
+					all_players[socket.id] = all_players[old_socket_id];
+					all_players[socket.id].id = socket.id;
+					all_players[socket.id].connected = true;
+					delete all_players[old_socket_id];
+					break;
+				}
 			}
 		}
 
