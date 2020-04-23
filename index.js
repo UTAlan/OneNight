@@ -38,11 +38,11 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-	logMessage(socket.id, ': A user connected!');
+	logMessage(socket.id, 'A user connected!');
 
 	if (!all_players[socket.id]) {
 		// Create player and send back to client
-		logMessage(socket.id, ': Creating player');
+		logMessage(socket.id, 'Creating player');
 		const player_name = generatePlayerName();
 		all_players[socket.id] = new Player({ id: socket.id, name: player_name });
 	}
@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
 
 		if (!all_players[socket.id]) {
 			// Create player and send back to client
-			logMessage(socket.id, ': Creating player');
+			logMessage(socket.id, 'Creating player');
 			const player_name = generatePlayerName();
 			all_players[socket.id] = new Player({ id: socket.id, name: player_name, token: data.uUID });
 		}
@@ -109,14 +109,14 @@ io.on('connection', (socket) => {
 
 	// Generate a new name
 	socket.on('generateNewName', () => {
-		logMessage(socket.id, ': Generate New Name');
+		logMessage(socket.id, 'Generate New Name');
 
 		socket.emit('nameGenerated', { name: generatePlayerName() });
 	});
 
 	// Player has changed their username
 	socket.on('usernameChanged', (name) => {
-		logMessage(socket.id, ': Changing username to ' + name);
+		logMessage(socket.id, 'Changing username to ' + name);
 		all_players[socket.id].name = name;
 
 		let game_id = all_players[socket.id].game_id;
@@ -128,7 +128,7 @@ io.on('connection', (socket) => {
 
 	// New Game created
 	socket.on('createGame', (data) => {
-		logMessage(socket.id, ': Creating game');
+		logMessage(socket.id, 'Creating game');
 		const g = new Game({ roles: data.roles });
 		all_players[socket.id].index = 1;
 		all_players[socket.id].ready = false;
@@ -142,11 +142,11 @@ io.on('connection', (socket) => {
 
 	// Join Game requested
 	socket.on('joinGame', (game_id) => {
-		logMessage(socket.id, ': Attempting to join game');
+		logMessage(socket.id, 'Attempting to join game');
 		
 		if (!current_games[game_id]) {
 			let message = 'Invalid Game ID';
-			logMessage(socket.id, ': ', message);
+			logMessage(socket.id, '', message);
 
 			socket.emit('gameJoinFailed', message);
 			return;
@@ -155,13 +155,13 @@ io.on('connection', (socket) => {
 		let num_players = Object.keys(current_games[game_id].players).length;
 		if (num_players == Object.keys(current_games[game_id].roles).length - 3) {
 			let message = 'Game is full';
-			logMessage(socket.id, ': ', message);
+			logMessage(socket.id, '', message);
 
 			socket.emit('gameJoinFailed', message);
 			return;
 		}
 
-		logMessage(socket.id, ': Joined game successfully');
+		logMessage(socket.id, 'Joined game successfully');
 		// Add player to game
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length - 3; i++) {
 			if (!current_games[game_id].players[i]) {
@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
 
 	// Begin Evening
 	socket.on('beginEvening', (game_id) => {
-		logMessage(socket.id, ': Begin Evening');
+		logMessage(socket.id, 'Begin Evening');
 		current_games[game_id].state = 'Evening';
 		
 		current_games[game_id].roles = shuffleObj(current_games[game_id].roles);
@@ -209,7 +209,7 @@ io.on('connection', (socket) => {
 				all_players[current_games[game_id].players[i].id].role = current_games[game_id].roles[i];
 			}
 		}
-		logMessage(socket.id, ': Roles assigned', current_games[game_id].roles);
+		logMessage(socket.id, 'Roles assigned', current_games[game_id].roles);
 
 		io.in(game_id).emit('eveningStarted', { game: current_games[game_id] });
 	});
@@ -240,7 +240,7 @@ io.on('connection', (socket) => {
 
 	// Swap cards
 	socket.on('swapCards', (data) => {
-		logMessage(socket.id, ': Swap cards');
+		logMessage(socket.id, 'Swap cards');
 
 		let orig_1 = current_games[data.game_id].roles[data.card_1];
 		let orig_2 = current_games[data.game_id].roles[data.card_2];
@@ -267,22 +267,22 @@ io.on('connection', (socket) => {
 
 		switch(data.action) {
 			case 'drink':
-				logMessage(socket.id, ': Drank ', data.index);
+				logMessage(socket.id, 'Drank ', data.index);
 				target = "Middle " + (data.index - 4);
 				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " drank!<br />Target - " + target);
 				break;
 			case 'reveal':
-				logMessage(socket.id, ': Revealed ', data.index);
+				logMessage(socket.id, 'Revealed ', data.index);
 				target = data.index < 5 ? current_games[data.game_id].players[data.index].name : "Middle " + (data.index - 4);
 				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " revealed a card.<br />Target - " + target);
 				break;
 			case 'rob':
-				logMessage(socket.id, ': Robbed ', data.index);
+				logMessage(socket.id, 'Robbed ', data.index);
 				target = current_games[data.game_id].players[data.index].name;
 				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " robbed a card.<br />Target - " + target);
 				break;
 			case 'swap':
-				logMessage(socket.id, ': Swapped ', data.card_1, data.card_2);
+				logMessage(socket.id, 'Swapped ', data.card_1, data.card_2);
 				target_1 = data.card_1 < 5 ? current_games[data.game_id].players[data.card_1].name : "Middle " + (data.card_1 - 4);
 				target_2 = data.card_2 < 5 ? current_games[data.game_id].players[data.card_2].name : "Middle " + (data.card_2 - 4);
 				current_games[data.game_id].log.push(time + ": " + all_players[socket.id].name + " swapped cards.<br />Targets - " + target_1 + " & " + target_2);
@@ -292,7 +292,7 @@ io.on('connection', (socket) => {
 
 	// Player voted
 	socket.on('playerVoted', (data) => {
-		logMessage(socket.id, ': Player voted!');
+		logMessage(socket.id, 'Player voted!');
 
 		current_games[data.game_id].votes[data.player] = (current_games[data.game_id].votes[data.player] || 0) + 1;
 		let death_msg = '';
@@ -300,7 +300,7 @@ io.on('connection', (socket) => {
 		
 		const num_votes = Object.values(current_games[data.game_id].votes).reduce((a, b) => a + b);
 		if (num_votes == Object.keys(current_games[data.game_id].roles).length - 3) {
-			logMessage(socket.id, ': Game Over!');
+			logMessage(socket.id, 'Game Over!');
 
 			// Everyone has voted, end the game
 			if (Object.values(current_games[data.game_id].votes).length == Object.keys(current_games[data.game_id].roles).length - 3) {
@@ -354,7 +354,7 @@ io.on('connection', (socket) => {
 
 	// Player left game
 	socket.on('leaveGame', () => {
-		logMessage(socket.id, ': Player left game');
+		logMessage(socket.id, 'Player left game');
 
 		if (all_players[socket.id] && all_players[socket.id].game_id) {
 			removePlayerFromGame(socket.id);
@@ -363,7 +363,7 @@ io.on('connection', (socket) => {
 
 	// Player disconnected
 	socket.on('disconnect', () => {
-		logMessage(socket.id, ': user disconnected');
+		logMessage(socket.id, 'user disconnected');
 
 		if (all_players[socket.id]) { 
 			if (all_players[socket.id].game_id) {
@@ -373,7 +373,7 @@ io.on('connection', (socket) => {
 			all_players[socket.id].connected = false;
 		}
 		
-		logMessage(socket.id, ': all_players - ', all_players);
+		logMessage(socket.id, 'all_players - ', all_players);
 	});
 });
 	
