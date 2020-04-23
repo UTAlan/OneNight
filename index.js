@@ -40,6 +40,13 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
 	console.log('A user connected!');
 
+	if (!all_players[socket.id]) {
+		// Create player and send back to client
+		console.log('Creating player');
+		const player_name = generatePlayerName();
+		all_players[socket.id] = new Player({ id: socket.id, name: player_name });
+	}
+
 	// Authenticate player or create new player
 	socket.on('login', (data) => {
 		if (!debug) {
