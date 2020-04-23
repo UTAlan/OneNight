@@ -120,7 +120,7 @@ io.on('connection', (socket) => {
 		all_players[socket.id].name = name;
 
 		let game_id = all_players[socket.id].game_id;
-		if (game_id > 0 && current_games[game_id]) {
+		if (game_id > 0 && current_games[game_id] && current_games[game_id].players[all_players[socket.id].index]) {
 			current_games[game_id].players[all_players[socket.id].index].name = name;
 			io.in(game_id).emit('playerNameChanged', { game: current_games[game_id] });
 		}
