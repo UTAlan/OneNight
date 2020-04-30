@@ -61,7 +61,7 @@ io.on('connection', (socket) => {
 					delete all_players[old_socket_id];
 
 					// Update any current games, as well
-					if (all_players[socket.id].game_id > 0 && current_games[all_players[socket.id].game_id]) {
+					if (all_players[socket.id].game_id > 0 && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
 						current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].id = socket.id;
 					}
 					break;
