@@ -9,7 +9,7 @@ app.use(express.static('.'));
 
 const Player = require('./player.js'),
 	Game = require('./game.js'),
-	debug = process.env.ONENIGHT_SERVER_DEBUG || true,
+	debug = false; // process.env.ONENIGHT_SERVER_DEBUG || true,
 	all_players = {},
 	current_games = {},
 	all_roles = ["Drunk", "Insomniac", "Mason", "Mason", "Minion", "Robber", "Seer", "Troublemaker", "Villager", "Villager", "Villager", "Werewolf", "Werewolf"];
@@ -39,23 +39,31 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
 	logMessage(socket.id, 'A user connected!');
+	logMessage(socket.id, 'Debug: ' + (debug ? 'True' : 'False'));
 
-	if (!all_players[socket.id]) {
-		// Create player and send back to client
-		logMessage(socket.id, 'Creating player');
-		const player_name = generatePlayerName();
-		all_players[socket.id] = new Player({ id: socket.id, name: player_name });
-	}
+	socket.emit('connected');
 
 	// Authenticate player or create new player
 	socket.on('login', (data) => {
+		logMessage(socket.id, 'login', data);
+		
 		if (!debug) {
+			logMessage('Check if already logged in but disconnected');
 			for (let old_socket_id of Object.keys(all_players)) {
 				if (all_players[old_socket_id].token == data.uUID) {
-					all_players[socket.id] = all_players[old_socket_id];
+					logMessage('Disconnected player found, reconnecting', 'old_socket_id: ' + old_socket_id, all_players[old_socket_id]);
+
+					// Get rid of stale player and replace with current player
+					all_players[socket.id] = new Player(all_players[old_socket_id]);
 					all_players[socket.id].id = socket.id;
 					all_players[socket.id].connected = true;
+					logMessage('New player', all_players[socket.id]);
 					delete all_players[old_socket_id];
+
+					// Update any current games, as well
+					if (all_players[socket.id].game_id > 0 && current_games[all_players[socket.id].game_id]) {
+						current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].id = socket.id;
+					}
 					break;
 				}
 			}
@@ -63,12 +71,14 @@ io.on('connection', (socket) => {
 
 		if (!all_players[socket.id]) {
 			// Create player and send back to client
-			logMessage(socket.id, 'Creating player');
+			logMessage(socket.id, 'Player doesn\'t exist yet. Creating.');
 			const player_name = generatePlayerName();
 			all_players[socket.id] = new Player({ id: socket.id, name: player_name, token: data.uUID });
 		}
 
-		socket.emit('connected', { player: all_players[socket.id], all_roles: all_roles, default_roles: default_roles });
+		socket.emit('loggedIn', { player: all_players[socket.id], all_roles: all_roles, default_roles: default_roles });
+
+		logMessage(socket.id, 'all_players - ', all_players);
 	
 		if (all_players[socket.id].game_id) {
 			const game_id = all_players[socket.id].game_id;
@@ -130,6 +140,14 @@ io.on('connection', (socket) => {
 	socket.on('createGame', (data) => {
 		logMessage(socket.id, 'Creating game');
 		const g = new Game({ roles: data.roles });
+
+		// Reconnect user if necessary
+		if (!all_players[socket.id]) {
+			logMessage('User was disconnected, attempt reconnect');
+			socket.emit('connected');
+			return;
+		}
+
 		all_players[socket.id].index = 1;
 		all_players[socket.id].ready = false;
 		all_players[socket.id].game_id = g.id;
@@ -143,6 +161,14 @@ io.on('connection', (socket) => {
 	// Join Game requested
 	socket.on('joinGame', (game_id) => {
 		logMessage(socket.id, 'Attempting to join game');
+
+		// Reconnect user if necessary
+		if (!all_players[socket.id]) {
+			logMessage('User was disconnected, attempt reconnect');
+			socket.emit('gameJoinFailed', "You were disconnected. Please try again.");
+			socket.emit('connected');
+			return;
+		}
 		
 		if (!current_games[game_id]) {
 			let message = 'Invalid Game ID';
@@ -161,10 +187,12 @@ io.on('connection', (socket) => {
 			return;
 		}
 
-		logMessage(socket.id, 'Joined game successfully');
+		logMessage(socket.id, 'Joined game successfully', current_games[game_id]);
+
 		// Add player to game
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length - 3; i++) {
-			if (!current_games[game_id].players[i]) {
+			if (!current_games[game_id].players[i] || current_games[game_id].players[i].id == socket.id) {
+				logMessage(socket.id, 'Player found at index ' + i);
 				all_players[socket.id].index = i;
 				break;
 			}
@@ -173,6 +201,8 @@ io.on('connection', (socket) => {
 		all_players[socket.id].ready = false;
 		all_players[socket.id].role = current_games[game_id].roles[all_players[socket.id].index];
 		current_games[game_id].players[all_players[socket.id].index] = all_players[socket.id];
+
+		logMessage(socket.id, 'Current Game', current_games[game_id]);
 
 		switch (current_games[game_id].state) {
 			case 'GameOver':
@@ -217,6 +247,14 @@ io.on('connection', (socket) => {
 	// Mark player as ready
 	socket.on('playerReady', (game_id) => {
 		logMessage(socket.id, ": Mark player as ready");
+
+		// Reconnect user if necessary
+		if (!all_players[socket.id]) {
+			logMessage('User was disconnected, attempt reconnect');
+			socket.emit('connected');
+			return;
+		}
+
 		all_players[socket.id].ready = true;
 		current_games[game_id].players[all_players[socket.id].index].ready = true;
 
@@ -356,6 +394,13 @@ io.on('connection', (socket) => {
 	socket.on('leaveGame', () => {
 		logMessage(socket.id, 'Player left game');
 
+		// Reconnect user if necessary
+		if (!all_players[socket.id]) {
+			logMessage('User was disconnected, attempt reconnect');
+			socket.emit('connected');
+			return;
+		}
+
 		if (all_players[socket.id] && all_players[socket.id].game_id) {
 			removePlayerFromGame(socket.id);
 		}
@@ -370,7 +415,11 @@ io.on('connection', (socket) => {
 				removePlayerFromGame(socket.id);
 			}
 
-			all_players[socket.id].connected = false;
+			if (!debug) {
+				all_players[socket.id].connected = false;
+			} else {
+				delete all_players[socket.id];
+			}
 		}
 		
 		logMessage(socket.id, 'all_players - ', all_players);
