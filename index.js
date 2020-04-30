@@ -85,13 +85,14 @@ io.on('connection', (socket) => {
 
 			// Add player to game
 			for (let i = 1; i <= Object.keys(current_games[game_id].roles).length - 3; i++) {
-				if (current_games[game_id].players[i].id == socket.id) {
-					break; // Player found in game already, skip
-				}
-
 				// Add player to first open slot in game
 				if (!current_games[game_id].players[i]) {
 					all_players[socket.id].index = i;
+					break;
+				}
+
+				// Player found in game already, skip
+				if (current_games[game_id].players[i].id == socket.id) {
 					break;
 				}
 			}
