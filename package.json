@@ -20,7 +20,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "fs": "0.0.1-security",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "jquery-ui-dist": "^1.12.1",
     "skeleton-css": "^2.0.4",
     "socket.io": "^2.3.0"
