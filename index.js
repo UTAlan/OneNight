@@ -37,6 +37,10 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+process.on('uncaughtException', (err, origin) => {
+  logMessage(err, origin);
+});
+
 io.on('connection', (socket) => {
 	logMessage(socket.id, 'A user connected!');
 	logMessage(socket.id, 'Debug: ' + (debug ? 'True' : 'False'));
@@ -184,17 +188,6 @@ io.on('connection', (socket) => {
 			return;
 		}
 
-		let num_players = Object.keys(current_games[game_id].players).length;
-		if (num_players == Object.keys(current_games[game_id].roles).length - 3) {
-			let message = 'Game is full';
-			logMessage(socket.id, '', message);
-
-			socket.emit('gameJoinFailed', message);
-			return;
-		}
-
-		logMessage(socket.id, 'Joined game successfully', current_games[game_id]);
-
 		// Add player to game
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length - 3; i++) {
 			if (!current_games[game_id].players[i] || current_games[game_id].players[i].id == socket.id) {
@@ -202,7 +195,15 @@ io.on('connection', (socket) => {
 				all_players[socket.id].index = i;
 				break;
 			}
+			if (i == Object.keys(current_games[game_id].roles).length - 3) {
+				let message = 'Game is full';
+				logMessage(socket.id, '', message);
+
+				socket.emit('gameJoinFailed', message);
+				return;
+			}
 		}
+		logMessage(socket.id, 'Joined game successfully', current_games[game_id]);
 		all_players[socket.id].game_id = game_id;
 		all_players[socket.id].ready = false;
 		all_players[socket.id].role = current_games[game_id].roles[all_players[socket.id].index];
@@ -418,7 +419,7 @@ io.on('connection', (socket) => {
 
 		if (all_players[socket.id]) { 
 			if (all_players[socket.id].game_id) {
-				removePlayerFromGame(socket.id);
+				//removePlayerFromGame(socket.id);
 			}
 
 			if (!debug) {
