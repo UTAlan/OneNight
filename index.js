@@ -9,7 +9,7 @@ app.use(express.static('.'));
 
 const Player = require('./player.js'),
 	Game = require('./game.js'),
-	debug = process.env.ONENIGHT_SERVER_DEBUG || true,
+	debug = false; // process.env.ONENIGHT_SERVER_DEBUG || true,
 	all_players = {},
 	current_games = {},
 	all_roles = ["Drunk", "Insomniac", "Mason", "Mason", "Minion", "Robber", "Seer", "Troublemaker", "Villager", "Villager", "Villager", "Werewolf", "Werewolf"];
