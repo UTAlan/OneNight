@@ -65,7 +65,7 @@ io.on('connection', (socket) => {
 					delete all_players[old_socket_id];
 
 					// Update any current games, as well
-					if (all_players[socket.id].game_id > 0 && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
+					if (all_players[socket.id].game_id && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
 						current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].id = socket.id;
 					}
 					break;
@@ -101,7 +101,7 @@ io.on('connection', (socket) => {
 				}
 			}
 			all_players[socket.id].ready = false;
-			all_players[socket.id].role = current_games[game_id].roles[all_players[socket.id].index];
+			all_players[socket.id].role = current_games[game_id].starting_roles[all_players[socket.id].index];
 			current_games[game_id].players[all_players[socket.id].index] = all_players[socket.id];
 
 			socket.join(game_id);
@@ -197,7 +197,7 @@ io.on('connection', (socket) => {
 			}
 			if (i == Object.keys(current_games[game_id].roles).length - 3) {
 				let message = 'Game is full';
-				logMessage(socket.id, '', message);
+				logMessage(socket.id, message);
 
 				socket.emit('gameJoinFailed', message);
 				return;
@@ -239,7 +239,8 @@ io.on('connection', (socket) => {
 		logMessage(socket.id, 'Begin Evening');
 		current_games[game_id].state = 'Evening';
 		
-		current_games[game_id].roles = shuffleObj(current_games[game_id].roles);
+		current_games[game_id].starting_roles = shuffleObj(current_games[game_id].roles);
+		Object.assign(current_games[game_id].roles, current_games[game_id].starting_roles);
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length; i++) {
 			if (i <= Object.keys(current_games[game_id].roles).length - 3) {
 				current_games[game_id].players[i].role = current_games[game_id].roles[i];

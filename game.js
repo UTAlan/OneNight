@@ -7,6 +7,7 @@ class Game {
 		this.log = [];
 		this.players = {};
 		this.roles = {};
+		this.starting_roles = {};
 		this.state = 'Afternoon';
 		this.votes = {};
 
@@ -43,6 +44,14 @@ class Game {
 
 	set roles(roles) {
 		this._roles = roles;
+	}
+
+	get starting_roles() {
+		return this._starting_roles;
+	}
+
+	set starting_roles(starting_roles) {
+		this._starting_roles = starting_roles;
 	}
 
 	get state() {
