@@ -190,8 +190,8 @@ io.on('connection', (socket) => {
 
 		// Add player to game
 		for (let i = 1; i <= Object.keys(current_games[game_id].roles).length - 3; i++) {
-			if (!current_games[game_id].players[i] || current_games[game_id].players[i].id == socket.id) {
-				logMessage(socket.id, 'Player found at index ' + i);
+			if (!current_games[game_id].players[i] || current_games[game_id].players[i].id == socket.id || (current_games[game_id].players[i].connected == false && current_games[game_id].players[i].token == all_players[socket.id].token)) {
+				logMessage(socket.id, 'Set Player index to ' + i);
 				all_players[socket.id].index = i;
 				break;
 			}
@@ -206,7 +206,8 @@ io.on('connection', (socket) => {
 		logMessage(socket.id, 'Joined game successfully', current_games[game_id]);
 		all_players[socket.id].game_id = game_id;
 		all_players[socket.id].ready = false;
-		all_players[socket.id].role = current_games[game_id].roles[all_players[socket.id].index];
+		all_players[socket.id].connected = true;
+		all_players[socket.id].role = current_games[game_id].starting_roles[all_players[socket.id].index];
 		current_games[game_id].players[all_players[socket.id].index] = all_players[socket.id];
 
 		logMessage(socket.id, 'Current Game', current_games[game_id]);
@@ -419,8 +420,8 @@ io.on('connection', (socket) => {
 		logMessage(socket.id, 'user disconnected');
 
 		if (all_players[socket.id]) { 
-			if (all_players[socket.id].game_id) {
-				//removePlayerFromGame(socket.id);
+			if (all_players[socket.id].game_id && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
+				current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].connected = false;
 			}
 
 			if (!debug) {
