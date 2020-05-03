@@ -517,6 +517,7 @@ const logMessage = (...args) => {
 }
 
 const sendEmail = (err) => {
+	logMessage('pwd: ' + process.env.ONENIGHT_GMAIL_PWD);
 	const transporter = nodeMailer.createTransport({
 		host: 'smtp.gmail.com',
 		port: 465,
