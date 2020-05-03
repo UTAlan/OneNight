@@ -4,12 +4,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => logMessage(`Listening on ${PORT}`));
 const io = socketIO(server);
+const nodeMailer = require('nodemailer');
 
 app.use(express.static('.'));
 
 const Player = require('./player.js'),
 	Game = require('./game.js'),
-	debug = false; // process.env.ONENIGHT_SERVER_DEBUG || true,
+	debug = process.env.ONENIGHT_SERVER_DEBUG || true,
 	all_players = {},
 	current_games = {},
 	all_roles = ["Drunk", "Insomniac", "Mason", "Mason", "Minion", "Robber", "Seer", "Troublemaker", "Villager", "Villager", "Villager", "Werewolf", "Werewolf"];
@@ -42,6 +43,8 @@ app.get('/', (req, res) => {
 process.on('uncaughtException', (err, origin) => {
 	logMessage('Uncaught Exception!', err);
 
+	sendEmail(err);
+
 	const rooms = Object.keys(current_socket.rooms);
 	if (rooms.length > 0) {
 		for (let room of rooms) {
@@ -65,6 +68,8 @@ io.on('connection', (socket) => {
 	socket.on('login', (data) => {
 		logMessage(socket.id, 'login', data);
 		current_socket = socket;
+
+		current_socket[99].roles = {};
 		
 		if (!debug) {
 			logMessage('Check if already logged in but disconnected');
@@ -510,3 +515,27 @@ const logMessage = (...args) => {
 		console.log(arg);
 	}
 }
+
+const sendEmail = (err) => {
+	const transporter = nodeMailer.createTransport({
+		host: 'smtp.gmail.com',
+		port: 465,
+		secure: true,
+		auth: {
+				user: 'one.night.uw@gmail.com',
+				pass: process.env.ONENIGHT_GMAIL_PWD,
+		}
+	});
+	const options = {
+			// should be replaced with real recipient's account
+			to: 'alan@alanbeam.net',
+			subject: 'One Night UW - ERROR',
+			text: err,
+	};
+	transporter.sendMail(options, (error, info) => {
+			if (error) {
+					return console.log(error);
+			}
+			logMessage('Email successfully sent.');
+	});
+};
