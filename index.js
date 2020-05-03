@@ -68,7 +68,7 @@ io.on('connection', (socket) => {
 		
 		if (!debug) {
 			logMessage('Check if already logged in but disconnected');
-			reconnectPlayer(data.uUID);
+			reconnectPlayer(socket.id, data.uUID);
 		}
 
 		if (!all_players[socket.id]) {
