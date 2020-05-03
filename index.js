@@ -68,8 +68,6 @@ io.on('connection', (socket) => {
 	socket.on('login', (data) => {
 		logMessage(socket.id, 'login', data);
 		current_socket = socket;
-
-		current_socket[99].roles = {};
 		
 		if (!debug) {
 			logMessage('Check if already logged in but disconnected');
@@ -517,7 +515,6 @@ const logMessage = (...args) => {
 }
 
 const sendEmail = (err) => {
-	logMessage('pwd: ' + process.env.ONENIGHT_GMAIL_PWD);
 	const transporter = nodeMailer.createTransport({
 		host: 'smtp.gmail.com',
 		port: 587,
