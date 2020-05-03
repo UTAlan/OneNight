@@ -33,44 +33,42 @@ const Player = require('./player.js'),
 		count: 2,
 	}];
 
+let current_socket = {};
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
 process.on('uncaughtException', (err, origin) => {
-  logMessage(err, origin);
+	logMessage('Uncaught Exception!', err);
+
+	const rooms = Object.keys(current_socket.rooms);
+	if (rooms.length > 0) {
+		for (let room of rooms) {
+			logMessage('Emitting error message to room: ' + room);
+			io.to(room).emit('gameError');
+		}
+	} else {
+		logMessage('Emitting error message to socket.id: ' + current_socket.id);
+		io.to(current_socket.id).emit('gameError');
+	}
 });
 
 io.on('connection', (socket) => {
 	logMessage(socket.id, 'A user connected!');
 	logMessage(socket.id, 'Debug: ' + (debug ? 'True' : 'False'));
+	current_socket = socket;
 
 	socket.emit('connected');
 
 	// Authenticate player or create new player
 	socket.on('login', (data) => {
 		logMessage(socket.id, 'login', data);
+		current_socket = socket;
 		
 		if (!debug) {
 			logMessage('Check if already logged in but disconnected');
-			for (let old_socket_id of Object.keys(all_players)) {
-				if (all_players[old_socket_id].token == data.uUID) {
-					logMessage('Disconnected player found, reconnecting', 'old_socket_id: ' + old_socket_id, all_players[old_socket_id]);
-
-					// Get rid of stale player and replace with current player
-					all_players[socket.id] = new Player(all_players[old_socket_id]);
-					all_players[socket.id].id = socket.id;
-					all_players[socket.id].connected = true;
-					logMessage('New player', all_players[socket.id]);
-					delete all_players[old_socket_id];
-
-					// Update any current games, as well
-					if (all_players[socket.id].game_id && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
-						current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].id = socket.id;
-					}
-					break;
-				}
-			}
+			reconnectPlayer(data.uUID);
 		}
 
 		if (!all_players[socket.id]) {
@@ -130,6 +128,7 @@ io.on('connection', (socket) => {
 	// Generate a new name
 	socket.on('generateNewName', () => {
 		logMessage(socket.id, 'Generate New Name');
+		current_socket = socket;
 
 		socket.emit('nameGenerated', { name: generatePlayerName() });
 	});
@@ -137,6 +136,8 @@ io.on('connection', (socket) => {
 	// Player has changed their username
 	socket.on('usernameChanged', (name) => {
 		logMessage(socket.id, 'Changing username to ' + name);
+		current_socket = socket;
+
 		all_players[socket.id].name = name;
 
 		let game_id = all_players[socket.id].game_id;
@@ -149,6 +150,8 @@ io.on('connection', (socket) => {
 	// New Game created
 	socket.on('createGame', (data) => {
 		logMessage(socket.id, 'Creating game');
+		current_socket = socket;
+
 		const g = new Game({ roles: data.roles });
 
 		// Reconnect user if necessary
@@ -171,6 +174,7 @@ io.on('connection', (socket) => {
 	// Join Game requested
 	socket.on('joinGame', (game_id) => {
 		logMessage(socket.id, 'Attempting to join game');
+		current_socket = socket;
 
 		// Reconnect user if necessary
 		if (!all_players[socket.id]) {
@@ -238,6 +242,8 @@ io.on('connection', (socket) => {
 	// Begin Evening
 	socket.on('beginEvening', (game_id) => {
 		logMessage(socket.id, 'Begin Evening');
+		current_socket = socket;
+
 		current_games[game_id].state = 'Evening';
 		
 		current_games[game_id].starting_roles = shuffleObj(current_games[game_id].roles);
@@ -256,6 +262,7 @@ io.on('connection', (socket) => {
 	// Mark player as ready
 	socket.on('playerReady', (game_id) => {
 		logMessage(socket.id, ": Mark player as ready");
+		current_socket = socket;
 
 		// Reconnect user if necessary
 		if (!all_players[socket.id]) {
@@ -288,7 +295,8 @@ io.on('connection', (socket) => {
 	// Swap cards
 	socket.on('swapCards', (data) => {
 		logMessage(socket.id, 'Swap cards');
-
+		current_socket = socket;
+		
 		let orig_1 = current_games[data.game_id].roles[data.card_1];
 		let orig_2 = current_games[data.game_id].roles[data.card_2];
 
@@ -300,7 +308,8 @@ io.on('connection', (socket) => {
 
 	// End Night
 	socket.on('endNight', (game_id) => {
-		logMessage(socket.id, ": End Night");
+		logMessage(socket.id, "End Night");
+		current_socket = socket;
 
 		current_games[game_id].state = 'Morning';
 		io.in(game_id).emit('morningStarted', { game: current_games[game_id] });
@@ -308,6 +317,9 @@ io.on('connection', (socket) => {
 
 	// Add to Game Log
 	socket.on('addToGameLog', (data) => {
+		logMessage(socket.id, 'Add to Game Log');
+		current_socket = socket;
+
 		const today = new Date();
 		const time = today.toLocaleTimeString();
 		let target, target_1, target_2;
@@ -340,6 +352,7 @@ io.on('connection', (socket) => {
 	// Player voted
 	socket.on('playerVoted', (data) => {
 		logMessage(socket.id, 'Player voted!');
+		current_socket = socket;
 
 		current_games[data.game_id].votes[data.player] = (current_games[data.game_id].votes[data.player] || 0) + 1;
 		let death_msg = '';
@@ -402,6 +415,7 @@ io.on('connection', (socket) => {
 	// Player left game
 	socket.on('leaveGame', () => {
 		logMessage(socket.id, 'Player left game');
+		current_socket = socket;
 
 		// Reconnect user if necessary
 		if (!all_players[socket.id]) {
@@ -418,33 +432,59 @@ io.on('connection', (socket) => {
 	// Player disconnected
 	socket.on('disconnect', () => {
 		logMessage(socket.id, 'user disconnected');
+		current_socket = socket;
 
 		if (all_players[socket.id]) { 
-			if (all_players[socket.id].game_id && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
-				current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].connected = false;
-			}
-
 			if (!debug) {
 				all_players[socket.id].connected = false;
+
+				if (all_players[socket.id].game_id && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
+					current_games[all_players[socket.id].game_id].players[all_players[socket.id].index].connected = false;
+				}
 			} else {
 				delete all_players[socket.id];
+
+				if (all_players[socket.id].game_id && current_games[all_players[socket.id].game_id] && current_games[all_players[socket.id].game_id].players[all_players[socket.id].index]) {
+					delete current_games[all_players[socket.id].game_id].players[all_players[socket.id].index];
+				}
 			}
 		}
 		
-		logMessage(socket.id, 'all_players - ', all_players);
+		logMessage(socket.id, 'all_players', all_players);
 	});
 });
+
+const reconnectPlayer = (socket_id, uUID) => {
+	for (let old_socket_id of Object.keys(all_players)) {
+		if (all_players[old_socket_id].token == uUID) {
+			logMessage('Disconnected player found, reconnecting', 'old_socket_id: ' + old_socket_id, all_players[old_socket_id]);
+
+			// Get rid of stale player and replace with current player
+			all_players[socket_id] = new Player(all_players[old_socket_id]);
+			all_players[socket_id].id = socket_id;
+			all_players[socket_id].connected = true;
+			logMessage('New player', all_players[socket_id]);
+			delete all_players[old_socket_id];
+
+			// Update any current games, as well
+			if (all_players[socket_id].game_id && current_games[all_players[socket_id].game_id] && current_games[all_players[socket_id].game_id].players[all_players[socket_id].index]) {
+				current_games[all_players[socket_id].game_id].players[all_players[socket_id].index].id = socket_id;
+			}
+			break;
+		}
+	}
+};
 	
 const shuffle = (array) => {
 	array.sort(() => Math.random() - 0.5);
 };
 
 const shuffleObj = (obj) => {
-	const k = Object.keys(obj);
-	shuffle(k);
+	const keys = Object.keys(obj);
+	shuffle(keys);
 	const result = {};
-	for (let i = 0; i < k.length; i++) {
-		result[i+1] = obj[k[i]];
+	for (let i = 0; i < keys.length; i++) {
+		result[i+1] = obj[keys[i]];
 	}
 	return result;
 };
@@ -458,7 +498,7 @@ const generatePlayerName = () => {
 };
 
 const removePlayerFromGame = (socket_id) => {
-	let game_id = all_players[socket_id].game_id;
+	const game_id = all_players[socket_id].game_id;
 	if (game_id > 0) {
 		delete current_games[game_id].players[all_players[socket_id].index];
 		io.in(game_id).emit('playerLeft', { game: current_games[game_id] });

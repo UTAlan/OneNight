@@ -447,7 +447,17 @@
 		// Display & populate Game Log
 		$('#game_log_wrapper').removeClass("hidden");
 		$('#game_log').html(my_game.log.join('<hr />'));
-	})
+	});
+
+	socket.on('gameError', () => {
+		$('.game_error').remove();
+		const game_error = $('<p/>').html('A game error has occurred. Our deepest apologies. You may need to start a new game, but feel free to attempt to continue.').addClass('game_error');
+		$('body').append(game_error);
+		$( ".game_error" ).dialog({
+			draggable: false,
+			modal: true,
+		});
+	});
 
 	const updateObjects = (objects = {}, refresh_board = true, refresh_players = true) => {
 		debugLog('Update Objects');

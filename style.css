@@ -116,3 +116,5 @@ p { margin-bottom: 10px; }
 .ui-selectee { border: dotted 2px orange; }
 .ui-selectable-disabled .ui-selectee { border: none; }
 .ui-selected { border: solid 2px orange; }
+
+.ui-widget-overlay { opacity: 0.3; }
