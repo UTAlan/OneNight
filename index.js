@@ -520,7 +520,7 @@ const sendEmail = (err) => {
 	logMessage('pwd: ' + process.env.ONENIGHT_GMAIL_PWD);
 	const transporter = nodeMailer.createTransport({
 		host: 'smtp.gmail.com',
-		port: 465,
+		port: 587,
 		secure: true,
 		auth: {
 				user: 'one.night.uw@gmail.com',
