@@ -521,7 +521,8 @@ const sendEmail = (err) => {
 	const transporter = nodeMailer.createTransport({
 		host: 'smtp.gmail.com',
 		port: 587,
-		secure: true,
+    secure: false,
+    requireTLS: true,
 		auth: {
 				user: 'one.night.uw@gmail.com',
 				pass: process.env.ONENIGHT_GMAIL_PWD,
